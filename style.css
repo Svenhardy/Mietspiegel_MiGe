@@ -466,6 +466,16 @@ footer {
     left: 120px;
 }
 
+/* Allgemeine Verbesserung für Tooltips */
+.info-icon {
+    position: relative;
+    z-index: 10; /* Sicherstellen dass Tooltips über anderen Elementen liegen */
+}
+
+.tooltip {
+    z-index: 1000; /* Sehr hoher z-index für Tooltips */
+}
+
 @media (max-width: 768px) {
     .content {
         flex-direction: column;
@@ -480,6 +490,15 @@ footer {
         width: 250px;
     }
     
+    .construction-tooltip {
+        left: -80px;
+        width: 250px;
+    }
+    
+    .construction-tooltip::after {
+        left: 100px;
+    }
+    
     .form-group {
         flex-direction: column;
         align-items: flex-start;
@@ -490,14 +509,63 @@ footer {
         justify-content: space-between;
         margin-top: 5px;
     }
-
-    .construction-tooltip {
-        left: -50px;
-        width: 250px;
+    
+    /* NEU: Logo-Anpassungen für Mobile */
+    .header-content {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
     }
     
-    .construction-tooltip::after {
-        left: 100px;
+    .logo-container {
+        position: static;
+        order: -1; /* Logo nach oben bringen */
     }
-}    
+    
+    .logo {
+        height: 40px; /* Kleinere Logo-Größe für Mobile */
+        margin-bottom: 5px;
+    }
+    
+    .header-text {
+        width: 100%;
+    }
+    
+    h1 {
+        font-size: 1.5rem; /* Kleinere Überschrift für Mobile */
+        margin-bottom: 5px;
+    }
+    
+    .subtitle {
+        font-size: 0.9rem; /* Kleinere Untertitel für Mobile */
+    }
 
+    /* NEU: Bessere Abstände für Ausstattung auf Mobile */
+    .checkbox-item {
+        margin-bottom: 15px; /* Mehr Abstand zwischen den Zeilen */
+        padding: 8px 0; /* Vertikaler Abstand */
+        align-items: flex-start; /* Oben ausrichten statt center */
+    }
+    
+    .checkbox-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .checkbox-left label {
+        line-height: 1.4; /* Bessere Lesbarkeit */
+    }
+    
+    /* Tooltips für Mobile anpassen */
+    .info-icon {
+        margin-left: 8px; /* Mehr Abstand zum Text */
+    }
+    
+    /* Sicherstellen dass Preisboxen nicht überlappen */
+    .value-display {
+        min-width: 80px; /* Konsistente Breite */
+        margin-left: 10px; /* Abstand zum Text */
+    }    
+
+}
