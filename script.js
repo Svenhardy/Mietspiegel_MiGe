@@ -1,7 +1,833 @@
 
 
-        // Vollständige Straßenliste mit Zuschlägen aus dem Mietspiegel
-        const streets = [
+// Basismiete-Tabelle (Wohnfläche in m² -> €/m²)
+const baseRentTable = {
+    20: 7.68, 21: 7.63, 22: 7.59, 23: 7.54, 24: 7.50, 25: 7.45,
+    26: 7.41, 27: 7.37, 28: 7.33, 29: 7.29, 30: 7.25, 31: 7.22,
+    32: 7.18, 33: 7.15, 34: 7.11, 35: 7.08, 36: 7.05, 37: 7.01,
+    38: 6.98, 39: 6.95, 40: 6.93, 41: 6.90, 42: 6.87, 43: 6.84,
+    44: 6.82, 45: 6.79, 46: 6.77, 47: 6.75, 48: 6.72, 49: 6.70,
+    50: 6.68, 51: 6.66, 52: 6.64, 53: 6.62, 54: 6.60, 55: 6.59,
+    56: 6.57, 57: 6.55, 58: 6.54, 59: 6.52, 60: 6.51, 61: 6.49,
+    62: 6.48, 63: 6.47, 64: 6.45, 65: 6.44, 66: 6.43, 67: 6.42,
+    68: 6.41, 69: 6.40, 70: 6.39, 71: 6.38, 72: 6.38, 73: 6.37,
+    74: 6.36, 75: 6.35, 76: 6.35, 77: 6.34, 78: 6.33, 79: 6.33,
+    80: 6.32, 81: 6.32, 82: 6.32, 83: 6.31, 84: 6.31, 85: 6.30,
+    86: 6.30, 87: 6.30, 88: 6.30, 89: 6.29, 90: 6.29, 91: 6.29,
+    92: 6.29, 93: 6.29, 94: 6.28, 95: 6.28, 96: 6.28, 97: 6.28,
+    98: 6.28, 99: 6.28, 100: 6.28, 101: 6.28, 102: 6.28, 103: 6.28,
+    104: 6.28, 105: 6.28, 106: 6.28, 107: 6.28, 108: 6.28, 109: 6.28,
+    110: 6.28, 111: 6.28, 112: 6.28, 113: 6.28, 114: 6.28, 115: 6.28,
+    116: 6.28, 117: 6.28, 118: 6.28, 119: 6.28, 120: 6.28, 121: 6.28,
+    122: 6.28, 123: 6.27, 124: 6.27, 125: 6.27, 126: 6.27, 127: 6.27,
+    128: 6.26, 129: 6.26, 130: 6.26, 131: 6.26, 132: 6.25, 133: 6.25,
+    134: 6.25, 135: 6.24, 136: 6.24, 137: 6.23, 138: 6.23, 139: 6.22,
+    140: 6.22, 141: 6.21, 142: 6.20, 143: 6.20, 144: 6.19, 145: 6.18,
+    146: 6.17, 147: 6.16, 148: 6.15, 149: 6.14, 150: 6.13
+};
+
+// Baujahr-Zuschläge
+const constructionYearAdjustments = {
+    "bis-1918": 0.63,
+    "1919-1945": 0.53,
+    "1946-1959": 0.31,
+    "1960-1990": 0.00,
+    "1991-2009": 0.96,
+    "2010-2015": 1.69,
+    "2016-2020": 2.64,
+    "2021-2022": 3.82
+};
+
+// Ausstattungs-Zuschläge
+const equipmentAdjustments = {
+    "maisonette": 0.31,
+    "towelRadiator": 0.13,
+    "floorHeating": 0.71,
+    "showerAndBath": 0.17,
+    "fittedKitchen": 0.51,
+    "highQualityFloor": 0.13,
+    "storageRoom": 0.13,
+    "elevator": 0.38,
+    "garden": 0.31,
+    "noBalcony": -0.18
+};
+
+// Modernisierungs-Zuschläge
+const modernizationAdjustments = {
+    0: 0.00,
+    1: 0.07,
+    2: 0.14,
+    3: 0.21,
+    4: 0.28
+};
+
+// Energetische Maßnahmen-Zuschläge
+const energyMeasuresAdjustments = {
+    0: 0.00,
+    1: 0.14,
+    2: 0.28,
+    3: 0.42,
+    4: 0.56,
+    5: 0.70
+};
+
+// Spannenwerte
+const spanLower = -0.83;
+const spanUpper = 0.76;
+
+// Maximale und minimale Zuschläge für Unsicherheitsberechnung
+const maxAdjustments = {
+    constructionYear: Math.max(...Object.values(constructionYearAdjustments)),
+    maisonette: equipmentAdjustments.maisonette,
+    towelRadiator: equipmentAdjustments.towelRadiator,
+    floorHeating: equipmentAdjustments.floorHeating,
+    showerAndBath: equipmentAdjustments.showerAndBath,
+    fittedKitchen: equipmentAdjustments.fittedKitchen,
+    highQualityFloor: equipmentAdjustments.highQualityFloor,
+    storageRoom: equipmentAdjustments.storageRoom,
+    elevator: equipmentAdjustments.elevator,
+    garden: equipmentAdjustments.garden,
+    noBalcony: Math.abs(equipmentAdjustments.noBalcony),
+    modernizations: Math.max(...Object.values(modernizationAdjustments)),
+    energyMeasures: Math.max(...Object.values(energyMeasuresAdjustments))
+};
+
+// Globale Variablen für Unsicherheitsstatus
+let uncertaintyStatus = {
+    constructionYear: false,
+    maisonette: false,
+    towelRadiator: false,
+    floorHeating: false,
+    showerAndBath: false,
+    fittedKitchen: false,
+    highQualityFloor: false,
+    storageRoom: false,
+    elevator: false,
+    garden: false,
+    noBalcony: false,
+    modernizations: false,
+    energyMeasures: false
+};
+
+// Autovervollständigung für Straßennamen
+const streetInput = document.getElementById('streetInput');
+const autocompleteList = document.getElementById('autocomplete-list');
+let selectedStreet = null;
+
+// Tab-Navigation
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab-Wechsel-Funktionalität
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.getAttribute('data-tab');
+            
+            // Entferne aktive Klasse von allen Tabs
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Füge aktive Klasse zum ausgewählten Tab hinzu
+            button.classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        });
+    });
+    
+    // Event-Listener für Unsicherheits-Checkboxen
+    document.querySelectorAll('.uncertainty-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const category = this.closest('.uncertainty-toggle').dataset.category;
+            uncertaintyStatus[category] = this.checked;
+        });
+    });
+    
+    // Initialisiere Slider
+    modernizationsSlider = initializeSlider('modernizationsTrack', 'modernizationsThumb', 'modernizationsDisplay', modernizationAdjustments, 4);
+    energyMeasuresSlider = initializeSlider('energyMeasuresTrack', 'energyMeasuresThumb', 'energyMeasuresDisplay', energyMeasuresAdjustments, 5);
+    
+    // Initiale Anzeigen aktualisieren
+    updateBaseRentDisplay();
+    updateConstructionYearDisplay();
+    updateLocationDisplay();
+});
+
+// Straßenname automatisch extrahieren
+streetInput.addEventListener('input', function() {
+    const streetNameField = document.getElementById('streetName');
+    const input = this.value;
+    
+    // Extrahiere nur Buchstaben, Leerzeichen und Punkte (keine Zahlen)
+    const streetNameOnly = input.replace(/[0-9\-–—]/g, '').trim();
+    streetNameField.value = streetNameOnly;
+    
+    // Autovervollständigung
+    updateAutocomplete(input);
+});
+
+function updateAutocomplete(input) {
+    autocompleteList.innerHTML = '';
+    
+    if (input.length < 2) {
+        return;
+    }
+    
+    // Filtere die Straßen basierend auf der Eingabe
+    const filteredStreets = streets.filter(street => 
+        street.name.toLowerCase().includes(input.toLowerCase())
+    );
+    
+    // Begrenze die Anzahl der angezeigten Ergebnisse
+    const displayStreets = filteredStreets.slice(0, 10);
+    
+    displayStreets.forEach(street => {
+        const item = document.createElement('div');
+        item.textContent = street.name;
+        item.addEventListener('click', function() {
+            streetInput.value = street.name;
+            const streetNameOnly = street.name.replace(/[0-9\-–—]/g, '').trim();
+            document.getElementById('streetName').value = streetNameOnly;
+            selectedStreet = street;
+            autocompleteList.innerHTML = '';
+            updateLocationDisplay();
+        });
+        autocompleteList.appendChild(item);
+    });
+}
+
+// Schließe die Autovervollständigung, wenn außerhalb geklickt wird
+document.addEventListener('click', function(e) {
+    if (e.target !== streetInput) {
+        autocompleteList.innerHTML = '';
+    }
+});
+
+// Slider-Funktionalität
+function initializeSlider(sliderId, thumbId, displayId, adjustments, maxValue) {
+    const track = document.getElementById(sliderId);
+    const thumb = document.getElementById(thumbId);
+    const display = document.getElementById(displayId);
+    const ticks = track.parentElement.querySelectorAll('.slider-tick');
+    
+    let isDragging = false;
+    let currentValue = 0;
+    
+    function updateSlider(value) {
+        currentValue = value;
+        const percentage = (value / maxValue) * 100;
+        thumb.style.left = percentage + '%';
+        
+        // Aktiviere den entsprechenden Tick
+        ticks.forEach(tick => {
+            if (parseInt(tick.dataset.value) === value) {
+                tick.classList.add('active');
+            } else {
+                tick.classList.remove('active');
+            }
+        });
+        
+        // Update die Anzeige
+        const adjustment = adjustments[value];
+        display.textContent = adjustment > 0 ? '+' + adjustment.toFixed(2) + ' €' : adjustment.toFixed(2) + ' €';
+        display.className = adjustment > 0 ? 'value-display value-positive' : 'value-display value-neutral';
+        
+        return value;
+    }
+    
+    // Klick auf Track
+    track.addEventListener('click', function(e) {
+        const rect = track.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+        const value = Math.round(percentage * maxValue);
+        updateSlider(value);
+    });
+    
+    // Klick auf Ticks
+    ticks.forEach(tick => {
+        tick.addEventListener('click', function() {
+            const value = parseInt(this.dataset.value);
+            updateSlider(value);
+        });
+    });
+    
+    // Drag-Funktionalität für Thumb
+    thumb.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+    
+    function onMouseMove(e) {
+        if (!isDragging) return;
+        
+        const rect = track.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+        const value = Math.round(percentage * maxValue);
+        updateSlider(value);
+    }
+    
+    function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+    
+    // Touch-Events für Mobile
+    thumb.addEventListener('touchstart', function(e) {
+        isDragging = true;
+        document.addEventListener('touchmove', onTouchMove);
+        document.addEventListener('touchend', onTouchEnd);
+    });
+    
+    function onTouchMove(e) {
+        if (!isDragging) return;
+        
+        const rect = track.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, touchX / rect.width));
+        const value = Math.round(percentage * maxValue);
+        updateSlider(value);
+    }
+    
+    function onTouchEnd() {
+        isDragging = false;
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+    }
+    
+    // Getter für aktuellen Wert
+    function getCurrentValue() {
+        return currentValue;
+    }
+    
+    // Initialisiere mit Wert 0
+    updateSlider(0);
+    
+    return { updateSlider, getCurrentValue };
+}
+
+// Event-Listener für Eingabefelder
+document.getElementById('area').addEventListener('input', updateBaseRentDisplay);
+document.getElementById('constructionYear').addEventListener('change', updateConstructionYearDisplay);
+
+// Event-Listener für Ausstattungs-Checkboxen
+const equipmentCheckboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+equipmentCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const displayId = this.id + 'Display';
+        const displayElement = document.getElementById(displayId);
+        const adjustment = equipmentAdjustments[this.id];
+        
+        if (this.checked) {
+            const adjustmentSign = adjustment > 0 ? '+' : '';
+            displayElement.textContent = adjustmentSign + adjustment.toFixed(2) + ' €';
+            displayElement.className = adjustment > 0 ? 'value-display value-positive' : 
+                                      (adjustment < 0 ? 'value-display value-negative' : 'value-display value-neutral');
+        } else {
+            displayElement.textContent = '-';
+            displayElement.className = 'value-display value-neutral';
+        }
+    });
+});
+
+document.getElementById('calculateBtn').addEventListener('click', calculateRent);
+document.getElementById('showIntermediateFromResults').addEventListener('click', showIntermediateResults);
+document.getElementById('shareBtn').addEventListener('click', shareData);
+
+// Funktionen zur Aktualisierung der Anzeigen
+function updateBaseRentDisplay() {
+    const area = parseInt(document.getElementById('area').value);
+    const displayElement = document.getElementById('baseRentDisplay');
+    
+    if (area && area >= 20 && area <= 150) {
+        const baseRent = baseRentTable[area];
+        displayElement.textContent = baseRent.toFixed(2) + ' €/m²';
+        displayElement.className = 'value-display value-neutral';
+    } else {
+        displayElement.textContent = '-';
+        displayElement.className = 'value-display value-neutral';
+    }
+}
+
+function updateConstructionYearDisplay() {
+    const constructionYear = document.getElementById('constructionYear').value;
+    const displayElement = document.getElementById('constructionYearDisplay');
+    
+    if (constructionYear) {
+        const adjustment = constructionYearAdjustments[constructionYear];
+        const adjustmentSign = adjustment > 0 ? '+' : '';
+        displayElement.textContent = adjustmentSign + adjustment.toFixed(2) + ' €';
+        displayElement.className = adjustment > 0 ? 'value-display value-positive' : 
+                                  (adjustment < 0 ? 'value-display value-negative' : 'value-display value-neutral');
+    } else {
+        displayElement.textContent = '-';
+        displayElement.className = 'value-display value-neutral';
+    }
+}
+
+function updateLocationDisplay() {
+    const displayElement = document.getElementById('locationDisplay');
+    
+    if (selectedStreet) {
+        const adjustment = selectedStreet.adjustment;
+        const adjustmentSign = adjustment > 0 ? '+' : '';
+        displayElement.textContent = adjustmentSign + adjustment.toFixed(2) + ' €';
+        displayElement.className = adjustment > 0 ? 'value-display value-positive' : 
+                                  (adjustment < 0 ? 'value-display value-negative' : 'value-display value-neutral');
+    } else {
+        displayElement.textContent = '-';
+        displayElement.className = 'value-display value-neutral';
+    }
+}
+
+// Hauptberechnungsfunktion
+function calculateRent() {
+    // Eingaben auslesen
+    const area = parseInt(document.getElementById('area').value);
+    const constructionYear = document.getElementById('constructionYear').value;
+    const currentRent = parseFloat(document.getElementById('currentRent').value) || 0;
+    
+    // Validierung
+    if (!area || area < 20 || area > 150) {
+        alert('Bitte geben Sie eine gültige Wohnfläche zwischen 20 und 150 m² ein.');
+        return;
+    }
+    
+    if (!constructionYear) {
+        alert('Bitte wählen Sie das Baujahr aus.');
+        return;
+    }
+    
+    // Basismiete berechnen (immer gleich)
+    const baseRent = baseRentTable[area];
+    
+    // Berechnungen für alle drei Szenarien
+    const standardResult = calculateScenario('standard', area, constructionYear, currentRent);
+    const optimisticResult = calculateScenario('optimistic', area, constructionYear, currentRent);
+    const pessimisticResult = calculateScenario('pessimistic', area, constructionYear, currentRent);
+    
+    // Ergebnisse anzeigen
+    displayResults(standardResult, optimisticResult, pessimisticResult, currentRent);
+    
+    // Zwischenergebnisse speichern und anzeigen
+    saveIntermediateResults(standardResult, optimisticResult, pessimisticResult, currentRent);
+    
+    // Spanne-Balken aktualisieren
+    updateRangeBar(standardResult.lowerSpan, standardResult.upperSpan, currentRent);
+    
+    // Spannen-Labels aktualisieren
+    document.getElementById('lowerSpanLabel').textContent = standardResult.lowerSpan.toFixed(0) + ' €';
+    document.getElementById('upperSpanLabel').textContent = standardResult.upperSpan.toFixed(0) + ' €';
+    document.getElementById('lowerSpanEndLabel').textContent = standardResult.lowerSpan.toFixed(0) + ' €';
+    document.getElementById('upperSpanEndLabel').textContent = standardResult.upperSpan.toFixed(0) + ' €';
+    
+    // Zum Ergebnis-Tab wechseln
+    switchToTab('results');
+}
+
+function calculateScenario(scenario, area, constructionYear, currentRent) {
+    let adjustments = 0;
+    
+    // Baujahr-Zuschlag
+    if (scenario === 'optimistic' && uncertaintyStatus.constructionYear) {
+        adjustments += 0; // Minimaler Zuschlag
+    } else if (scenario === 'pessimistic' && uncertaintyStatus.constructionYear) {
+        adjustments += maxAdjustments.constructionYear; // Maximaler Zuschlag
+    } else {
+        adjustments += constructionYearAdjustments[constructionYear] || 0;
+    }
+    
+    // Wohnlage-Zuschlag (immer gleich, da keine Unsicherheit)
+    let locationAdjustment = 0;
+    if (selectedStreet) {
+        locationAdjustment = selectedStreet.adjustment;
+    }
+    adjustments += locationAdjustment;
+    
+    // Ausstattungs-Zuschläge
+    for (const [key, value] of Object.entries(equipmentAdjustments)) {
+        const isChecked = document.getElementById(key).checked;
+        const isUncertain = uncertaintyStatus[key];
+        
+        if (scenario === 'optimistic' && isUncertain) {
+            // Im optimistischen Szenario: nur positive Zuschläge bei Unsicherheit ignorieren
+            if (value > 0) {
+                // Positive Zuschläge ignorieren
+            } else if (value < 0) {
+                // Negative Zuschläge beibehalten (günstiger für Mieter)
+                adjustments += value;
+            }
+        } else if (scenario === 'pessimistic' && isUncertain) {
+            // Im pessimistischen Szenario: maximale positive Zuschläge annehmen
+            if (value > 0) {
+                adjustments += maxAdjustments[key];
+            } else if (value < 0) {
+                // Negative Zuschläge ignorieren (ungünstiger für Mieter)
+            }
+        } else {
+            // Standard-Szenario oder keine Unsicherheit: tatsächlichen Wert verwenden
+            if (isChecked) {
+                adjustments += value;
+            }
+        }
+    }
+    
+    // Modernisierungs-Zuschlag
+    const modernizationsValue = modernizationsSlider.getCurrentValue();
+    if (scenario === 'optimistic' && uncertaintyStatus.modernizations) {
+        adjustments += 0; // Minimaler Zuschlag
+    } else if (scenario === 'pessimistic' && uncertaintyStatus.modernizations) {
+        adjustments += maxAdjustments.modernizations; // Maximaler Zuschlag
+    } else {
+        adjustments += modernizationAdjustments[modernizationsValue] || 0;
+    }
+    
+    // Energetische Maßnahmen-Zuschlag
+    const energyMeasuresValue = energyMeasuresSlider.getCurrentValue();
+    if (scenario === 'optimistic' && uncertaintyStatus.energyMeasures) {
+        adjustments += 0; // Minimaler Zuschlag
+    } else if (scenario === 'pessimistic' && uncertaintyStatus.energyMeasures) {
+        adjustments += maxAdjustments.energyMeasures; // Maximaler Zuschlag
+    } else {
+        adjustments += energyMeasuresAdjustments[energyMeasuresValue] || 0;
+    }
+    
+    // Durchschnittliche Vergleichsmiete pro m²
+    const avgRentPerSqm = baseRentTable[area] + adjustments;
+    
+    // Spannenwerte pro m²
+    const lowerLimitPerSqm = avgRentPerSqm + spanLower;
+    const upperLimitPerSqm = avgRentPerSqm + spanUpper;
+    
+    // Monatliche Vergleichsmiete
+    const monthlyRent = avgRentPerSqm * area;
+    const lowerSpan = lowerLimitPerSqm * area;
+    const upperSpan = upperLimitPerSqm * area;
+    
+    return {
+        baseRent: baseRentTable[area],
+        adjustments,
+        avgRentPerSqm,
+        lowerLimitPerSqm,
+        upperLimitPerSqm,
+        monthlyRent,
+        lowerSpan,
+        upperSpan
+    };
+}
+
+function displayResults(standard, optimistic, pessimistic, currentRent) {
+    // Aktuelle Miete und Differenzen
+    document.getElementById('currentRentResult').textContent = currentRent.toFixed(2) + ' €';
+    
+    const standardDifference = currentRent - standard.monthlyRent;
+    const optimisticDifference = currentRent - optimistic.monthlyRent;
+    const pessimisticDifference = currentRent - pessimistic.monthlyRent;
+    
+    document.getElementById('differenceResult').textContent = standardDifference.toFixed(2) + ' €';
+    document.getElementById('differenceOptimisticResult').textContent = optimisticDifference.toFixed(2) + ' €';
+    document.getElementById('differencePessimisticResult').textContent = pessimisticDifference.toFixed(2) + ' €';
+    
+    // Differenz-Text
+    const differenceText = document.getElementById('differenceText');
+    if (standardDifference > 0) {
+        differenceText.textContent = `Ihre Miete liegt ${standardDifference.toFixed(2)} € über der durchschnittlichen Vergleichsmiete`;
+        differenceText.className = 'difference negative';
+    } else if (standardDifference < 0) {
+        differenceText.textContent = `Ihre Miete liegt ${Math.abs(standardDifference).toFixed(2)} € unter der durchschnittlichen Vergleichsmiete`;
+        differenceText.className = 'difference positive';
+    } else {
+        differenceText.textContent = 'Ihre Miete entspricht der durchschnittlichen Vergleichsmiete';
+        differenceText.className = 'difference';
+    }
+}
+
+function saveIntermediateResults(standard, optimistic, pessimistic, currentRent) {
+    const results = {
+        standard,
+        optimistic,
+        pessimistic,
+        currentRent,
+        timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem('intermediateResults', JSON.stringify(results));
+    displayIntermediateResults(results);
+}
+
+function displayIntermediateResults(results) {
+    const { standard, optimistic, pessimistic, currentRent } = results;
+    const intermediateContent = document.getElementById('intermediate-content');
+    
+    intermediateContent.innerHTML = `
+        <div class="result-columns">
+            <div class="result-column">
+                <div class="column-header">
+                    <span>Angabe</span>
+                    <span class="info-icon">?
+                        <span class="tooltip">Ergebnis für die konkreten Eingaben</span>
+                    </span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Basismiete (€/m²):</span>
+                    <span class="result-value">${standard.baseRent.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Summe Zu-/Abschläge (€/m²):</span>
+                    <span class="result-value">${standard.adjustments.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Durchschnittliche Vergleichsmiete (€/m²):</span>
+                    <span class="result-value">${standard.avgRentPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Untere Grenze (€/m²):</span>
+                    <span class="result-value">${standard.lowerLimitPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Obere Grenze (€/m²):</span>
+                    <span class="result-value">${standard.upperLimitPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Monatliche Vergleichsmiete (€):</span>
+                    <span class="result-value">${standard.monthlyRent.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Untere Spanne (€):</span>
+                    <span class="result-value">${standard.lowerSpan.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Obere Spanne (€):</span>
+                    <span class="result-value">${standard.upperSpan.toFixed(2)} €</span>
+                </div>
+            </div>
+            
+            <div class="result-column">
+                <div class="column-header">
+                    <span>Optimistisch</span>
+                    <span class="info-icon">?
+                        <span class="tooltip">Ergebnis unter Einbeziehung der Unsicherheit zu Gunsten des Mieters</span>
+                    </span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Basismiete (€/m²):</span>
+                    <span class="result-value optimistic-bg">${optimistic.baseRent.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Summe Zu-/Abschläge (€/m²):</span>
+                    <span class="result-value optimistic-bg">${optimistic.adjustments.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Durchschnittliche Vergleichsmiete (€/m²):</span>
+                    <span class="result-value optimistic-bg">${optimistic.avgRentPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Untere Grenze (€/m²):</span>
+                    <span class="result-value optimistic-bg">${optimistic.lowerLimitPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Obere Grenze (€/m²):</span>
+                    <span class="result-value optimistic-bg">${optimistic.upperLimitPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Monatliche Vergleichsmiete (€):</span>
+                    <span class="result-value optimistic-bg">${optimistic.monthlyRent.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Untere Spanne (€):</span>
+                    <span class="result-value optimistic-bg">${optimistic.lowerSpan.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Obere Spanne (€):</span>
+                    <span class="result-value optimistic-bg">${optimistic.upperSpan.toFixed(2)} €</span>
+                </div>
+            </div>
+            
+            <div class="result-column">
+                <div class="column-header">
+                    <span>Pessimistisch</span>
+                    <span class="info-icon">?
+                        <span class="tooltip">Ergebnis unter Einbeziehung der Unsicherheit zu Ungunsten des Mieters</span>
+                    </span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Basismiete (€/m²):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.baseRent.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Summe Zu-/Abschläge (€/m²):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.adjustments.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Durchschnittliche Vergleichsmiete (€/m²):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.avgRentPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Untere Grenze (€/m²):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.lowerLimitPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Obere Grenze (€/m²):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.upperLimitPerSqm.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Monatliche Vergleichsmiete (€):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.monthlyRent.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Untere Spanne (€):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.lowerSpan.toFixed(2)} €</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Obere Spanne (€):</span>
+                    <span class="result-value pessimistic-bg">${pessimistic.upperSpan.toFixed(2)} €</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function showIntermediateResults() {
+    switchToTab('intermediate');
+}
+
+function switchToTab(tabId) {
+    // Entferne aktive Klasse von allen Tabs
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Füge aktive Klasse zum ausgewählten Tab hinzu
+    document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(`${tabId}-tab`).classList.add('active');
+}
+
+function updateRangeBar(lowerSpan, upperSpan, currentRent) {
+    const rangeBar = document.getElementById('rangeIndicator');
+    const currentRentMarker = document.getElementById('currentRentMarker');
+    const rangeBarWidth = document.querySelector('.range-bar').offsetWidth;
+    
+    // Bereich für die Spanne definieren (mit etwas Puffer)
+    const minValue = Math.min(lowerSpan, currentRent) * 0.9;
+    const maxValue = Math.max(upperSpan, currentRent) * 1.1;
+    const valueRange = maxValue - minValue;
+    
+    // Position der Spanne berechnen
+    const lowerPosition = ((lowerSpan - minValue) / valueRange) * 100;
+    const upperPosition = ((upperSpan - minValue) / valueRange) * 100;
+    const currentPosition = ((currentRent - minValue) / valueRange) * 100;
+    
+    // Balken und Marker positionieren
+    rangeBar.style.left = lowerPosition + '%';
+    rangeBar.style.width = (upperPosition - lowerPosition) + '%';
+    
+    currentRentMarker.style.left = currentPosition + '%';
+    
+    // Marker-Sichtbarkeit anpassen
+    if (currentRent > 0) {
+        currentRentMarker.style.display = 'block';
+    } else {
+        currentRentMarker.style.display = 'none';
+    }
+}
+
+async function shareData() {
+    // Validierung: Prüfen ob eine Berechnung durchgeführt wurde
+    const results = localStorage.getItem('intermediateResults');
+    if (!results) {
+        alert('Bitte führen Sie zuerst eine Berechnung durch, bevor Sie Daten teilen.');
+        return;
+    }
+    
+    const parsedResults = JSON.parse(results);
+    
+    // Eingabewerte sammeln
+    const landlordName = document.getElementById('landlordName').value;
+    const managementName = document.getElementById('managementName').value;
+    const streetName = document.getElementById('streetName').value;
+    const houseNumber = document.getElementById('houseNumber').value;
+    
+    // Validierung: Mindestens Straße muss ausgefüllt sein
+    if (!streetName) {
+        alert('Bitte geben Sie mindestens den Straßennamen an.');
+        return;
+    }
+    
+// Daten für Google Sheet vorbereiten
+    const currentRent = parseFloat(document.getElementById('currentRent').value);
+    
+    const data = {
+        streetName: streetName,
+        houseNumber: houseNumber,
+        landlordName: landlordName,
+        managementName: managementName,
+        area: document.getElementById('area').value,
+        constructionYear: document.getElementById('constructionYear').value,
+        currentRent: currentRent.toFixed(2),
+        compareRent: parsedResults.standard.monthlyRent.toFixed(2),
+        difference: (currentRent - parsedResults.standard.monthlyRent).toFixed(2),
+        differenceOptimistic: (currentRent - parsedResults.optimistic.monthlyRent).toFixed(2),
+        differencePessimistic: (currentRent - parsedResults.pessimistic.monthlyRent).toFixed(2),
+        statement1: document.getElementById('statement1').checked,
+        statement2: document.getElementById('statement2').checked,
+        statement3: document.getElementById('statement3').checked
+    };
+    
+    // ⚠️ HIER DEINE GOOGLE APPS SCRIPT URL EINFÜGEN:
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHb_562Jl70TI1GReSZ720ezkmPEZAQVRj9gWDf-QEzUTWOGiCiv7qESW4Qw_rc-yTpg/exec';
+    
+    // Button während des Sendens deaktivieren
+    const shareButton = document.getElementById('shareBtn');
+    const originalText = shareButton.textContent;
+    shareButton.disabled = true;
+    shareButton.textContent = 'Wird gesendet...';
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Wichtig für Google Apps Script
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        // Bei no-cors können wir die Response nicht lesen, aber wenn kein Error geworfen wird, war es erfolgreich
+        alert('Daten wurden erfolgreich übermittelt. Vielen Dank für Ihre Teilnahme!');
+        
+        // Felder zurücksetzen
+        document.getElementById('landlordName').value = '';
+        document.getElementById('managementName').value = '';
+        document.getElementById('houseNumber').value = '';
+        document.getElementById('statement1').checked = false;
+        document.getElementById('statement2').checked = false;
+        document.getElementById('statement3').checked = false;
+        
+    } catch (error) {
+        console.error('Fehler beim Senden:', error);
+        alert('Fehler beim Senden der Daten. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support.');
+    } finally {
+        // Button wieder aktivieren
+        shareButton.disabled = false;
+        shareButton.textContent = originalText;
+    }
+}
+
+// Initialisierung
+let modernizationsSlider, energyMeasuresSlider;
+
+// Beim Laden der Seite gespeicherte Zwischenergebnisse anzeigen
+document.addEventListener('DOMContentLoaded', function() {
+    const savedResults = localStorage.getItem('intermediateResults');
+    if (savedResults) {
+        const results = JSON.parse(savedResults);
+        displayIntermediateResults(results);
+    }
+});
+
+// Platzhalter für die Straßenliste - hier können Sie Ihre Straßendaten einfügen
+    const streets = [
             { name: "St.-Jürgen-Str.", adjustment: 0.81 },
             { name: "A.-Tischbein-Str.", adjustment: -0.91 },
             { name: "Aalstecherstr.", adjustment: 0.50 },
@@ -2165,450 +2991,5 @@
             { name: "Zur Promenade 3-5", adjustment: 1.23 },
             { name: "Zur Warnow", adjustment: 0.70 },
             { name: "Zur Yachtwerft", adjustment: 0.00 }
-        ];
 
-        // Basismiete-Tabelle (Wohnfläche in m² -> €/m²)
-        const baseRentTable = {
-            20: 7.68, 21: 7.63, 22: 7.59, 23: 7.54, 24: 7.50, 25: 7.45,
-            26: 7.41, 27: 7.37, 28: 7.33, 29: 7.29, 30: 7.25, 31: 7.22,
-            32: 7.18, 33: 7.15, 34: 7.11, 35: 7.08, 36: 7.05, 37: 7.01,
-            38: 6.98, 39: 6.95, 40: 6.93, 41: 6.90, 42: 6.87, 43: 6.84,
-            44: 6.82, 45: 6.79, 46: 6.77, 47: 6.75, 48: 6.72, 49: 6.70,
-            50: 6.68, 51: 6.66, 52: 6.64, 53: 6.62, 54: 6.60, 55: 6.59,
-            56: 6.57, 57: 6.55, 58: 6.54, 59: 6.52, 60: 6.51, 61: 6.49,
-            62: 6.48, 63: 6.47, 64: 6.45, 65: 6.44, 66: 6.43, 67: 6.42,
-            68: 6.41, 69: 6.40, 70: 6.39, 71: 6.38, 72: 6.38, 73: 6.37,
-            74: 6.36, 75: 6.35, 76: 6.35, 77: 6.34, 78: 6.33, 79: 6.33,
-            80: 6.32, 81: 6.32, 82: 6.32, 83: 6.31, 84: 6.31, 85: 6.30,
-            86: 6.30, 87: 6.30, 88: 6.30, 89: 6.29, 90: 6.29, 91: 6.29,
-            92: 6.29, 93: 6.29, 94: 6.28, 95: 6.28, 96: 6.28, 97: 6.28,
-            98: 6.28, 99: 6.28, 100: 6.28, 101: 6.28, 102: 6.28, 103: 6.28,
-            104: 6.28, 105: 6.28, 106: 6.28, 107: 6.28, 108: 6.28, 109: 6.28,
-            110: 6.28, 111: 6.28, 112: 6.28, 113: 6.28, 114: 6.28, 115: 6.28,
-            116: 6.28, 117: 6.28, 118: 6.28, 119: 6.28, 120: 6.28, 121: 6.28,
-            122: 6.28, 123: 6.27, 124: 6.27, 125: 6.27, 126: 6.27, 127: 6.27,
-            128: 6.26, 129: 6.26, 130: 6.26, 131: 6.26, 132: 6.25, 133: 6.25,
-            134: 6.25, 135: 6.24, 136: 6.24, 137: 6.23, 138: 6.23, 139: 6.22,
-            140: 6.22, 141: 6.21, 142: 6.20, 143: 6.20, 144: 6.19, 145: 6.18,
-            146: 6.17, 147: 6.16, 148: 6.15, 149: 6.14, 150: 6.13
-        };
-
-        // Baujahr-Zuschläge
-        const constructionYearAdjustments = {
-            "bis-1918": 0.63,
-            "1919-1945": 0.53,
-            "1946-1959": 0.31,
-            "1960-1990": 0.00,
-            "1991-2009": 0.96,
-            "2010-2015": 1.69,
-            "2016-2020": 2.64,
-            "2021-2022": 3.82
-        };
-
-        // Ausstattungs-Zuschläge
-        const equipmentAdjustments = {
-            "maisonette": 0.31,
-            "towelRadiator": 0.13,
-            "floorHeating": 0.71,
-            "showerAndBath": 0.17,
-            "fittedKitchen": 0.51,
-            "highQualityFloor": 0.13,
-            "storageRoom": 0.13,
-            "elevator": 0.38,
-            "garden": 0.31,
-            "noBalcony": -0.18
-        };
-
-        // Modernisierungs-Zuschläge
-        const modernizationAdjustments = {
-            0: 0.00,
-            1: 0.07,
-            2: 0.14,
-            3: 0.21
-        };
-
-        // Energetische Maßnahmen-Zuschläge
-        const energyMeasuresAdjustments = {
-            0: 0.00,
-            1: 0.14,
-            2: 0.28,
-            3: 0.42,
-            4: 0.56,
-            5: 0.70
-        };
-
-        // Spannenwerte
-        const spanLower = -0.83;
-        const spanUpper = 0.76;
-
-       // Autovervollständigung für Straßennamen
-const streetInput = document.getElementById('streetInput');
-const autocompleteList = document.getElementById('autocomplete-list');
-let selectedStreet = null;
-
-streetInput.addEventListener('input', function() {
-    const input = this.value;
-    autocompleteList.innerHTML = '';
-    
-    if (input.length < 2) {
-        return;
-    }
-    
-    const filteredStreets = streets.filter(street => 
-        street.name.toLowerCase().includes(input.toLowerCase())
-    );
-    
-    filteredStreets.forEach(street => {
-        const item = document.createElement('div');
-        item.textContent = street.name;
-        item.addEventListener('click', function() {
-            streetInput.value = street.name;
-            selectedStreet = street;
-            autocompleteList.innerHTML = '';
-            updateLocationDisplay();
-        });
-        autocompleteList.appendChild(item);
-    });
-});
-
-// Schließe die Autovervollständigung, wenn außerhalb geklickt wird
-document.addEventListener('click', function(e) {
-    if (e.target !== streetInput) {
-        autocompleteList.innerHTML = '';
-    }
-});
-
-// Slider-Funktionalität
-function initializeSlider(sliderId, thumbId, displayId, adjustments, maxValue) {
-    const track = document.getElementById(sliderId);
-    const thumb = document.getElementById(thumbId);
-    const display = document.getElementById(displayId);
-    const ticks = track.parentElement.querySelectorAll('.slider-tick');
-    
-    let isDragging = false;
-    
-    function updateSlider(value) {
-        const percentage = (value / maxValue) * 100;
-        thumb.style.left = percentage + '%';
-        
-        // Aktiviere den entsprechenden Tick
-        ticks.forEach(tick => {
-            if (parseInt(tick.dataset.value) === value) {
-                tick.classList.add('active');
-            } else {
-                tick.classList.remove('active');
-            }
-        });
-        
-        // Update die Anzeige
-        const adjustment = adjustments[value];
-        display.textContent = adjustment > 0 ? '+' + adjustment.toFixed(2) + ' €' : adjustment.toFixed(2) + ' €';
-        display.className = adjustment > 0 ? 'value-display value-positive' : 'value-display value-neutral';
-        
-        return value;
-    }
-    
-    // Klick auf Track
-    track.addEventListener('click', function(e) {
-        const rect = track.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-        const value = Math.round(percentage * maxValue);
-        updateSlider(value);
-    });
-    
-    // Klick auf Ticks
-    ticks.forEach(tick => {
-        tick.addEventListener('click', function() {
-            const value = parseInt(this.dataset.value);
-            updateSlider(value);
-        });
-    });
-    
-    // Drag-Funktionalität für Thumb
-    thumb.addEventListener('mousedown', function(e) {
-        isDragging = true;
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    });
-    
-    function onMouseMove(e) {
-        if (!isDragging) return;
-        
-        const rect = track.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-        const value = Math.round(percentage * maxValue);
-        updateSlider(value);
-    }
-    
-    function onMouseUp() {
-        isDragging = false;
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-    }
-    
-    // Touch-Events für Mobile
-    thumb.addEventListener('touchstart', function(e) {
-        isDragging = true;
-        document.addEventListener('touchmove', onTouchMove);
-        document.addEventListener('touchend', onTouchEnd);
-    });
-    
-    function onTouchMove(e) {
-        if (!isDragging) return;
-        
-        const rect = track.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, touchX / rect.width));
-        const value = Math.round(percentage * maxValue);
-        updateSlider(value);
-    }
-    
-    function onTouchEnd() {
-        isDragging = false;
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onTouchEnd);
-    }
-    
-    // Initialisiere mit Wert 0
-    return updateSlider(0);
-}
-
-// Event-Listener für Eingabefelder
-document.getElementById('area').addEventListener('input', updateBaseRentDisplay);
-document.getElementById('constructionYear').addEventListener('change', updateConstructionYearDisplay);
-
-// Event-Listener für Ausstattungs-Checkboxen
-const equipmentCheckboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
-equipmentCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        const displayId = this.id + 'Display';
-        const displayElement = document.getElementById(displayId);
-        const adjustment = equipmentAdjustments[this.id];
-        
-        if (this.checked) {
-            const adjustmentSign = adjustment > 0 ? '+' : '';
-            displayElement.textContent = adjustmentSign + adjustment.toFixed(2) + ' €';
-            displayElement.className = adjustment > 0 ? 'value-display value-positive' : 
-                                      (adjustment < 0 ? 'value-display value-negative' : 'value-display value-neutral');
-        } else {
-            displayElement.textContent = '-';
-            displayElement.className = 'value-display value-neutral';
-        }
-    });
-});
-
-document.getElementById('calculateBtn').addEventListener('click', calculateRent);
-
-// Funktionen zur Aktualisierung der Anzeigen
-function updateBaseRentDisplay() {
-    const area = parseInt(document.getElementById('area').value);
-    const displayElement = document.getElementById('baseRentDisplay');
-    
-    if (area && area >= 20 && area <= 150) {
-        const baseRent = baseRentTable[area];
-        displayElement.textContent = baseRent.toFixed(2) + ' €';
-        displayElement.className = 'value-display value-neutral';
-    } else {
-        displayElement.textContent = '-';
-        displayElement.className = 'value-display value-neutral';
-    }
-}
-
-function updateConstructionYearDisplay() {
-    const constructionYear = document.getElementById('constructionYear').value;
-    const displayElement = document.getElementById('constructionYearDisplay');
-    
-    if (constructionYear) {
-        const adjustment = constructionYearAdjustments[constructionYear];
-        const adjustmentSign = adjustment > 0 ? '+' : '';
-        displayElement.textContent = adjustmentSign + adjustment.toFixed(2) + ' €';
-        displayElement.className = adjustment > 0 ? 'value-display value-positive' : 
-                                  (adjustment < 0 ? 'value-display value-negative' : 'value-display value-neutral');
-    } else {
-        displayElement.textContent = '-';
-        displayElement.className = 'value-display value-neutral';
-    }
-}
-
-function updateLocationDisplay() {
-    const displayElement = document.getElementById('locationDisplay');
-    
-    if (selectedStreet) {
-        const adjustment = selectedStreet.adjustment;
-        const adjustmentSign = adjustment > 0 ? '+' : '';
-        displayElement.textContent = adjustmentSign + adjustment.toFixed(2) + ' €';
-        displayElement.className = adjustment > 0 ? 'value-display value-positive' : 
-                                  (adjustment < 0 ? 'value-display value-negative' : 'value-display value-neutral');
-    } else {
-        displayElement.textContent = '-';
-        displayElement.className = 'value-display value-neutral';
-    }
-}
-
-// Hauptberechnungsfunktion
-function calculateRent() {
-    // Eingaben auslesen
-    const area = parseInt(document.getElementById('area').value);
-    const constructionYear = document.getElementById('constructionYear').value;
-    const currentRent = parseFloat(document.getElementById('currentRent').value) || 0;
-    
-    // Straßenzuschlag ermitteln
-    let locationAdjustment = 0;
-    if (selectedStreet) {
-        locationAdjustment = selectedStreet.adjustment;
-    } else if (streetInput.value) {
-        // Versuche, den Straßennamen in der Liste zu finden
-        const foundStreet = streets.find(street => 
-            street.name.toLowerCase() === streetInput.value.toLowerCase()
-        );
-        if (foundStreet) {
-            locationAdjustment = foundStreet.adjustment;
-            selectedStreet = foundStreet;
-            updateLocationDisplay();
-        }
-    }
-    
-    // Modernisierungs- und Energie-Werte aus den Slidern lesen
-    const modernizationsThumb = document.getElementById('modernizationsThumb');
-    const modernizationsTrack = document.getElementById('modernizationsTrack');
-    const modernizationsValue = getSliderValue(modernizationsThumb, modernizationsTrack, 4);
-    
-    const energyMeasuresThumb = document.getElementById('energyMeasuresThumb');
-    const energyMeasuresTrack = document.getElementById('energyMeasuresTrack');
-    const energyMeasuresValue = getSliderValue(energyMeasuresThumb, energyMeasuresTrack, 5);
-    
-    // Validierung
-    if (!area || area < 20 || area > 150) {
-        alert('Bitte geben Sie eine gültige Wohnfläche zwischen 20 und 150 m² ein.');
-        return;
-    }
-    
-    if (!constructionYear) {
-        alert('Bitte wählen Sie das Baujahr aus.');
-        return;
-    }
-    
-    // Basismiete berechnen
-    const baseRent = baseRentTable[area];
-    
-    // Zu- und Abschläge berechnen
-    let adjustments = 0;
-    
-    // Baujahr-Zuschlag
-    adjustments += constructionYearAdjustments[constructionYear] || 0;
-    
-    // Wohnlage-Zuschlag
-    adjustments += locationAdjustment;
-    
-    // Ausstattungs-Zuschläge
-    for (const [key, value] of Object.entries(equipmentAdjustments)) {
-        if (document.getElementById(key).checked) {
-            adjustments += value;
-        }
-    }
-    
-    // Modernisierungs-Zuschlag
-    adjustments += modernizationAdjustments[modernizationsValue] || 0;
-    
-    // Energetische Maßnahmen-Zuschlag
-    adjustments += energyMeasuresAdjustments[energyMeasuresValue] || 0;
-    
-    // Durchschnittliche Vergleichsmiete pro m²
-    const avgRentPerSqm = baseRent + adjustments;
-    
-    // Spannenwerte pro m²
-    const lowerLimitPerSqm = avgRentPerSqm + spanLower;
-    const upperLimitPerSqm = avgRentPerSqm + spanUpper;
-    
-    // Monatliche Vergleichsmiete
-    const monthlyRent = avgRentPerSqm * area;
-    const lowerSpan = lowerLimitPerSqm * area;
-    const upperSpan = upperLimitPerSqm * area;
-    
-    // Ergebnisse anzeigen
-    document.getElementById('baseRentResult').textContent = baseRent.toFixed(2) + ' €';
-    document.getElementById('adjustmentsResult').textContent = adjustments.toFixed(2) + ' €';
-    document.getElementById('avgRentResult').textContent = avgRentPerSqm.toFixed(2) + ' €';
-    document.getElementById('lowerLimitResult').textContent = lowerLimitPerSqm.toFixed(2) + ' €';
-    document.getElementById('upperLimitResult').textContent = upperLimitPerSqm.toFixed(2) + ' €';
-    document.getElementById('monthlyRentResult').textContent = monthlyRent.toFixed(2) + ' €';
-    document.getElementById('lowerSpanResult').textContent = lowerSpan.toFixed(2) + ' €';
-    document.getElementById('upperSpanResult').textContent = upperSpan.toFixed(2) + ' €';
-    document.getElementById('currentRentResult').textContent = currentRent.toFixed(2) + ' €';
-    
-    // Differenz berechnen und anzeigen
-    const difference = currentRent - monthlyRent;
-    document.getElementById('differenceResult').textContent = difference.toFixed(2) + ' €';
-    
-    const differenceText = document.getElementById('differenceText');
-    if (difference > 0) {
-        differenceText.textContent = `Ihre Miete liegt ${difference.toFixed(2)} € über der durchschnittlichen Vergleichsmiete`;
-        differenceText.className = 'difference negative';
-    } else if (difference < 0) {
-        differenceText.textContent = `Ihre Miete liegt ${Math.abs(difference).toFixed(2)} € unter der durchschnittlichen Vergleichsmiete`;
-        differenceText.className = 'difference positive';
-    } else {
-        differenceText.textContent = 'Ihre Miete entspricht der durchschnittlichen Vergleichsmiete';
-        differenceText.className = 'difference';
-    }
-    
-    // Spanne-Balken aktualisieren
-    updateRangeBar(lowerSpan, upperSpan, currentRent);
-    
-    // Spannen-Labels aktualisieren
-    document.getElementById('lowerSpanLabel').textContent = lowerSpan.toFixed(0) + ' €';
-    document.getElementById('upperSpanLabel').textContent = upperSpan.toFixed(0) + ' €';
-    document.getElementById('lowerSpanEndLabel').textContent = lowerSpan.toFixed(0) + ' €';
-    document.getElementById('upperSpanEndLabel').textContent = upperSpan.toFixed(0) + ' €';
-}
-
-function getSliderValue(thumb, track, maxValue) {
-    const trackRect = track.getBoundingClientRect();
-    const thumbRect = thumb.getBoundingClientRect();
-    const thumbCenter = thumbRect.left + thumbRect.width / 2;
-    const percentage = (thumbCenter - trackRect.left) / trackRect.width;
-    return Math.round(percentage * maxValue);
-}
-
-function updateRangeBar(lowerSpan, upperSpan, currentRent) {
-    const rangeBar = document.getElementById('rangeIndicator');
-    const currentRentMarker = document.getElementById('currentRentMarker');
-    const rangeBarWidth = document.querySelector('.range-bar').offsetWidth;
-    
-    // Bereich für die Spanne definieren (mit etwas Puffer)
-    const minValue = Math.min(lowerSpan, currentRent) * 0.9;
-    const maxValue = Math.max(upperSpan, currentRent) * 1.1;
-    const valueRange = maxValue - minValue;
-    
-    // Position der Spanne berechnen
-    const lowerPosition = ((lowerSpan - minValue) / valueRange) * 100;
-    const upperPosition = ((upperSpan - minValue) / valueRange) * 100;
-    const currentPosition = ((currentRent - minValue) / valueRange) * 100;
-    
-    // Balken und Marker positionieren
-    rangeBar.style.left = lowerPosition + '%';
-    rangeBar.style.width = (upperPosition - lowerPosition) + '%';
-    
-    currentRentMarker.style.left = currentPosition + '%';
-    
-    // Marker-Sichtbarkeit anpassen
-    if (currentRent > 0) {
-        currentRentMarker.style.display = 'block';
-    } else {
-        currentRentMarker.style.display = 'none';
-    }
-}
-
-// Initialisierung
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialisiere Slider
-    initializeSlider('modernizationsTrack', 'modernizationsThumb', 'modernizationsDisplay', modernizationAdjustments, 4);
-    initializeSlider('energyMeasuresTrack', 'energyMeasuresThumb', 'energyMeasuresDisplay', energyMeasuresAdjustments, 5);
-    
-    // Initiale Anzeigen aktualisieren
-    updateBaseRentDisplay();
-    updateConstructionYearDisplay();
-    updateLocationDisplay();
-});
+];        

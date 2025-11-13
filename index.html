@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
-<link rel="stylesheet" href="style.css">    
-
+    <link rel="stylesheet" href="style.css">    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rostock Mietspiegel Rechner 2024</title>
-
 </head>
 <body>
     <div class="container">
@@ -22,279 +19,337 @@
                 </div>
             </div>
         </header>
+        
+        <!-- Tab-Navigation -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="input">Eingabe</button>
+            <button class="tab-button" data-tab="results">Ergebnisse</button>
+            <button class="tab-button" data-tab="intermediate">Zwischenergebnisse</button>
+        </div>
                 
-        <div class="content">
+        <!-- Tab-Inhalte -->
+        <div class="tab-content active" id="input-tab">
             <div class="input-section">
-                <div class="form-group">
-                    <label class="form-label" for="area">Wohnfläche (m²)</label>
-                    <div class="form-controls">
-                        <input type="number" id="area" min="20" max="150" step="1" placeholder="z.B. 75">
-                        <div class="value-display value-neutral" id="baseRentDisplay">-</div>
+<!-- Abschnitt 1: Grunddaten -->
+<div class="input-island">
+    <div class="section-divider">
+        <h2>Grunddaten</h2>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label" for="area">Wohnfläche (m²)</label>
+        <div class="form-controls">
+            <input type="number" id="area" min="20" max="150" step="1" placeholder="z.B. 75">
+            <div class="value-display value-neutral" id="baseRentDisplay">-</div>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <div class="form-label-with-uncertainty">
+            <label for="constructionYear">
+                Baujahr
+                <span class="info-icon">?
+                    <span class="tooltip construction-tooltip">
+                        Maßgebend ist das Jahr der Bezugsfertigkeit. Bei später errichteten Wohnungen in Gebäuden – z.B. Dachgeschossausbau – gilt das Jahr des Ausbaus; Modernisierungsmaßnahmen beeinflussen nicht das Baujahr.
+                    </span>
+                </span>
+            </label>
+            <div class="uncertainty-toggle" data-category="constructionYear">
+                <input type="checkbox" id="uncertainty-constructionYear" class="uncertainty-checkbox">
+                <label for="uncertainty-constructionYear" class="uncertainty-label">Unsicher</label>
+            </div>
+        </div>
+        <div class="form-controls">
+            <select id="constructionYear">
+                <option value="">Bitte auswählen</option>
+                <option value="2021-2022">2021-2022</option>
+                <option value="2016-2020">2016-2020</option>
+                <option value="2010-2015">2010-2015</option>
+                <option value="1991-2009">1991-2009</option>
+                <option value="1960-1990">1960-1990</option>
+                <option value="1946-1959">1946-1959</option>
+                <option value="1919-1945">1919-1945</option>
+                <option value="bis-1918">bis 1918</option>
+            </select>
+            <div class="value-display value-neutral" id="constructionYearDisplay">-</div>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label" for="streetInput">Wohnlage (Straße)</label>
+        <div class="form-controls">
+            <div class="autocomplete">
+                <input type="text" id="streetInput" placeholder="Straßennamen eingeben...">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            <div class="value-display value-neutral" id="locationDisplay">-</div>
+        </div>
+    </div>
+</div>
+                
+                <!-- Abschnitt 2: Ausstattung -->
+                <div class="input-island">
+                    <div class="section-divider">
+                        <h2>Ausstattung der Wohnung</h2>
+                    </div>
+                    
+                    <div class="form-group-full">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="maisonette">
+                                    <label for="maisonette">
+                                        Maisonette-Wohnung
+                                        <span class="info-icon">?
+                                            <span class="tooltip">Wohnung ist auf zwei Etagen verteilt und über eine interne Treppe verbunden</span>
+                                        </span>
+                                    </label>
+                                    <div class="uncertainty-toggle" data-category="maisonette">
+                                        <input type="checkbox" id="uncertainty-maisonette" class="uncertainty-checkbox">
+                                        <label for="uncertainty-maisonette" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="maisonetteDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="towelRadiator">
+                                    <label for="towelRadiator">Handtuchheizkörper im Bad</label>
+                                    <div class="uncertainty-toggle" data-category="towelRadiator">
+                                        <input type="checkbox" id="uncertainty-towelRadiator" class="uncertainty-checkbox">
+                                        <label for="uncertainty-towelRadiator" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="towelRadiatorDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="floorHeating">
+                                    <label for="floorHeating">Fußbodenheizung im Bad</label>
+                                    <div class="uncertainty-toggle" data-category="floorHeating">
+                                        <input type="checkbox" id="uncertainty-floorHeating" class="uncertainty-checkbox">
+                                        <label for="uncertainty-floorHeating" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="floorHeatingDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="showerAndBath">
+                                    <label for="showerAndBath">Dusche und Badewanne</label>
+                                    <div class="uncertainty-toggle" data-category="showerAndBath">
+                                        <input type="checkbox" id="uncertainty-showerAndBath" class="uncertainty-checkbox">
+                                        <label for="uncertainty-showerAndBath" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="showerAndBathDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="fittedKitchen">
+                                    <label for="fittedKitchen">
+                                        Komplette Einbauküche
+                                        <span class="info-icon">?
+                                            <span class="tooltip">Herd, Spüle, Schränke und Einbaukühlschrank</span>
+                                        </span>
+                                    </label>
+                                    <div class="uncertainty-toggle" data-category="fittedKitchen">
+                                        <input type="checkbox" id="uncertainty-fittedKitchen" class="uncertainty-checkbox">
+                                        <label for="uncertainty-fittedKitchen" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="fittedKitchenDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="highQualityFloor">
+                                    <label for="highQualityFloor">
+                                        Hochwertiger Fußbodenbelag
+                                        <span class="info-icon">?
+                                            <span class="tooltip">in mindestens der Hälfte der Räume (z.B. Parkettboden, Holzdielen, Vinyl-/Designböden)</span>
+                                        </span>
+                                    </label>
+                                    <div class="uncertainty-toggle" data-category="highQualityFloor">
+                                        <input type="checkbox" id="uncertainty-highQualityFloor" class="uncertainty-checkbox">
+                                        <label for="uncertainty-highQualityFloor" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="highQualityFloorDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="storageRoom">
+                                    <label for="storageRoom">
+                                        Abstellraum in der Wohnung
+                                        <span class="info-icon">?
+                                            <span class="tooltip">kein Einbauschrank, mind. 1 m²</span>
+                                        </span>
+                                    </label>
+                                    <div class="uncertainty-toggle" data-category="storageRoom">
+                                        <input type="checkbox" id="uncertainty-storageRoom" class="uncertainty-checkbox">
+                                        <label for="uncertainty-storageRoom" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="storageRoomDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="elevator">
+                                    <label for="elevator">
+                                        Aufzug
+                                        <span class="info-icon">?
+                                            <span class="tooltip">in Gebäuden mit bis zu 6 Geschossen</span>
+                                        </span>
+                                    </label>
+                                    <div class="uncertainty-toggle" data-category="elevator">
+                                        <input type="checkbox" id="uncertainty-elevator" class="uncertainty-checkbox">
+                                        <label for="uncertainty-elevator" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="elevatorDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="garden">
+                                    <label for="garden">
+                                        Garten
+                                        <span class="info-icon">?
+                                            <span class="tooltip">alleinige oder gemeinschaftliche Nutzung</span>
+                                        </span>
+                                    </label>
+                                    <div class="uncertainty-toggle" data-category="garden">
+                                        <input type="checkbox" id="uncertainty-garden" class="uncertainty-checkbox">
+                                        <label for="uncertainty-garden" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="gardenDisplay">-</div>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-left">
+                                    <input type="checkbox" id="noBalcony">
+                                    <label for="noBalcony">Kein Balkon/Terrasse/Loggia</label>
+                                    <div class="uncertainty-toggle" data-category="noBalcony">
+                                        <input type="checkbox" id="uncertainty-noBalcony" class="uncertainty-checkbox">
+                                        <label for="uncertainty-noBalcony" class="uncertainty-label">Unsicher</label>
+                                    </div>
+                                </div>
+                                <div class="value-display value-neutral" id="noBalconyDisplay">-</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label" for="constructionYear">
-                        Baujahr
-                        <span class="info-icon">?
-                            <span class="tooltip construction-tooltip">
-                                Maßgebend ist das Jahr der Bezugsfertigkeit. Bei später errichteten Wohnungen in Gebäuden – z.B. Dachgeschossausbau – gilt das Jahr des Ausbaus; Modernisierungsmaßnahmen beeinflussen nicht das Baujahr.
-                            </span>
-                        </span>
-                    </label>
-                    <div class="form-controls">
-                        <select id="constructionYear">
-                            <option value="">Bitte auswählen</option>
-                            <option value="2021-2022">2021-2022</option>
-                            <option value="2016-2020">2016-2020</option>
-                            <option value="2010-2015">2010-2015</option>
-                            <option value="1991-2009">1991-2009</option>
-                            <option value="1960-1990">1960-1990</option>
-                            <option value="1946-1959">1946-1959</option>
-                            <option value="1919-1945">1919-1945</option>
-                            <option value="bis-1918">bis 1918</option>
-                        </select>
-                        <div class="value-display value-neutral" id="constructionYearDisplay">-</div>
+                <!-- Abschnitt 3: Modernisierungen -->
+                <div class="input-island">
+                    <div class="section-divider">
+                        <h2>Modernisierungen (ab 2010)</h2>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="streetInput">Wohnlage (Straße)</label>
-                    <div class="form-controls">
-                        <div class="autocomplete">
-                            <input type="text" id="streetInput" placeholder="Straßennamen eingeben...">
-                            <div id="autocomplete-list" class="autocomplete-items"></div>
-                        </div>
-                        <div class="value-display value-neutral" id="locationDisplay">-</div>
-                    </div>
-                </div>
-                
-                <div class="form-group-full">
-                    <label class="form-label">Ausstattung der Wohnung</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="maisonette">
-                                <label for="maisonette">
-                                    Maisonette-Wohnung
+                    
+                    <div class="form-group-full">
+                        <div class="modernization-header">
+                            <div class="modernization-text-container">
+                                <p class="modernization-label">
+                                    Anzahl der durchgeführten Modernisierungen:
                                     <span class="info-icon">?
-                                        <span class="tooltip">Wohnung ist auf zwei Etagen verteilt und über eine interne Treppe verbunden</span>
+                                        <span class="tooltip">
+                                            Der Zuschlag für Modernisierungen ergibt sich aus der Anzahl der Modernisierungen, die ab 2010 durchgeführt wurden. Es kann für eine Wohnung nur ein Zuschlag angewendet werden. Aus folgenden Modernisierungen ist die Anzahl zu bestimmen:<br><br>
+                                            • Sanitäreinrichtung (mind. Fliesen im Bad, Badewanne/Duschtasse, Waschbecken)<br>
+                                            • Elektroinstallation<br>
+                                            • Innen-/Wohnungstüren erneuert
+                                        </span>
                                     </span>
-                                </label>
+                                </p>
+                                <div class="uncertainty-toggle" data-category="modernizations">
+                                    <input type="checkbox" id="uncertainty-modernizations" class="uncertainty-checkbox">
+                                    <label for="uncertainty-modernizations" class="uncertainty-label">Unsicher</label>
+                                </div>
                             </div>
-                            <div class="value-display value-neutral" id="maisonetteDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="towelRadiator">
-                                <label for="towelRadiator">Handtuchheizkörper im Bad</label>
-                            </div>
-                            <div class="value-display value-neutral" id="towelRadiatorDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="floorHeating">
-                                <label for="floorHeating">Fußbodenheizung im Bad</label>
-                            </div>
-                            <div class="value-display value-neutral" id="floorHeatingDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="showerAndBath">
-                                <label for="showerAndBath">Dusche und Badewanne</label>
-                            </div>
-                            <div class="value-display value-neutral" id="showerAndBathDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="fittedKitchen">
-                                <label for="fittedKitchen">
-                                    Komplette Einbauküche
-                                    <span class="info-icon">?
-                                        <span class="tooltip">Herd, Spüle, Schränke und Einbaukühlschrank</span>
-                                    </span>
-                                </label>
-                            </div>
-                            <div class="value-display value-neutral" id="fittedKitchenDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="highQualityFloor">
-                                <label for="highQualityFloor">
-                                    Hochwertiger Fußbodenbelag
-                                    <span class="info-icon">?
-                                        <span class="tooltip">in mindestens der Hälfte der Räume (z.B. Parkettboden, Holzdielen, Vinyl-/Designböden)</span>
-                                    </span>
-                                </label>
-                            </div>
-                            <div class="value-display value-neutral" id="highQualityFloorDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="storageRoom">
-                                <label for="storageRoom">
-                                    Abstellraum in der Wohnung
-                                    <span class="info-icon">?
-                                        <span class="tooltip">kein Einbauschrank, mind. 1 m²</span>
-                                    </span>
-                                </label>
-                            </div>
-                            <div class="value-display value-neutral" id="storageRoomDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="elevator">
-                                <label for="elevator">
-                                    Aufzug
-                                    <span class="info-icon">?
-                                        <span class="tooltip">in Gebäuden mit bis zu 6 Geschossen</span>
-                                    </span>
-                                </label>
-                            </div>
-                            <div class="value-display value-neutral" id="elevatorDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="garden">
-                                <label for="garden">
-                                    Garten
-                                    <span class="info-icon">?
-                                        <span class="tooltip">alleinige oder gemeinschaftliche Nutzung</span>
-                                    </span>
-                                </label>
-                            </div>
-                            <div class="value-display value-neutral" id="gardenDisplay">-</div>
-                        </div>
-                        <div class="checkbox-item">
-                            <div class="checkbox-left">
-                                <input type="checkbox" id="noBalcony">
-                                <label for="noBalcony">Kein Balkon/Terrasse/Loggia</label>
-                            </div>
-                            <div class="value-display value-neutral" id="noBalconyDisplay">-</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group-full">
-                    <label class="form-label">Modernisierungen (ab 2010)
-                        <span class="info-icon">?
-                            <span class="tooltip">
-                                Der Zuschlag für Modernisierungen ergibt sich aus der Anzahl der Modernisierungen, die ab 2010 durchgeführt wurden. Es kann für eine Wohnung nur ein Zuschlag angewendet werden. Aus folgenden Modernisierungen ist die Anzahl zu bestimmen:<br><br>
-                                • Sanitäreinrichtung (mind. Fliesen im Bad, Badewanne/Duschtasse, Waschbecken)<br>
-                                • Elektroinstallation<br>
-                                • Innen-/Wohnungstüren erneuert
-                            </span>
-                        </span>
-                    </label>
-                    <div class="modernization-group">
-                        <p>Anzahl der durchgeführten Modernisierungen:</p>
-                        <div class="slider-container">
-                            <div class="slider-track" id="modernizationsTrack"></div>
-                            <div class="slider-thumb" id="modernizationsThumb"></div>
-                            <div class="slider-ticks">
-                                <span class="slider-tick active" data-value="0">0</span>
-                                <span class="slider-tick" data-value="1">1</span>
-                                <span class="slider-tick" data-value="2">2</span>
-                                <span class="slider-tick" data-value="3">3</span>
-                                <span class="slider-tick" data-value="4">4</span>
-                            </div>
-                        </div>
-                        <div class="form-controls" style="justify-content: flex-end; margin-top: 10px;">
                             <div class="value-display value-neutral" id="modernizationsDisplay">-</div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="form-group-full">
-                    <label class="form-label">Energetische Maßnahmen (ab 2015)
-                        <span class="info-icon">?
-                            <span class="tooltip">
-                                Der Zuschlag für energetische Maßnahmen ergibt sich aus der Anzahl der Maßnahmen, die ab 2015 durchgeführt wurden. Es kann für eine Wohnung nur ein Zuschlag angewendet werden. Aus folgenden Maßnahmen ist die Anzahl zu bestimmen:<br><br>
-                                • Außenwand überwiegend gedämmt<br>
-                                • Kellerdecke überwiegend gedämmt<br>
-                                • Dach bzw. oberste Geschossdecke überwiegend gedämmt<br>
-                                • Fensteraustausch (alle Fenster in der Wohnung)<br>
-                                • Erneuerung der Heizungsinstallation (Wärmeerzeuger) (z.B. Heizkessel, Gastherme, Anschluss an Fernwärme)
-                            </span>
-                        </span>
-                    </label>
-                    <div class="modernization-group">
-                        <p>Anzahl der durchgeführten Maßnahmen:</p>
-                        <div class="slider-container">
-                            <div class="slider-track" id="energyMeasuresTrack"></div>
-                            <div class="slider-thumb" id="energyMeasuresThumb"></div>
-                            <div class="slider-ticks">
-                                <span class="slider-tick active" data-value="0">0</span>
-                                <span class="slider-tick" data-value="1">1</span>
-                                <span class="slider-tick" data-value="2">2</span>
-                                <span class="slider-tick" data-value="3">3</span>
-                                <span class="slider-tick" data-value="4">4</span>
-                                <span class="slider-tick" data-value="5">5</span>
+                        <div class="modernization-group">
+                            <div class="slider-container">
+                                <div class="slider-track" id="modernizationsTrack"></div>
+                                <div class="slider-thumb" id="modernizationsThumb"></div>
+                                <div class="slider-ticks">
+                                    <span class="slider-tick active" data-value="0">0</span>
+                                    <span class="slider-tick" data-value="1">1</span>
+                                    <span class="slider-tick" data-value="2">2</span>
+                                    <span class="slider-tick" data-value="3">3</span>
+                                    <span class="slider-tick" data-value="4">4</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-controls" style="justify-content: flex-end; margin-top: 10px;">
+                    </div>
+                </div>
+                
+                <!-- Abschnitt 4: Energetische Maßnahmen -->
+                <div class="input-island">
+                    <div class="section-divider">
+                        <h2>Energetische Maßnahmen (ab 2015)</h2>
+                    </div>
+                    
+                    <div class="form-group-full">
+                        <div class="modernization-header">
+                            <div class="modernization-text-container">
+                                <p class="modernization-label">
+                                    Anzahl der durchgeführten Maßnahmen:
+                                    <span class="info-icon">?
+                                        <span class="tooltip">
+                                            Der Zuschlag für energetische Maßnahmen ergibt sich aus der Anzahl der Maßnahmen, die ab 2015 durchgeführt wurden. Es kann für eine Wohnung nur ein Zuschlag angewendet werden. Aus folgenden Maßnahmen ist die Anzahl zu bestimmen:<br><br>
+                                            • Außenwand überwiegend gedämmt<br>
+                                            • Kellerdecke überwiegend gedämmt<br>
+                                            • Dach bzw. oberste Geschossdecke überwiegend gedämmt<br>
+                                            • Fensteraustausch (alle Fenster in der Wohnung)<br>
+                                            • Erneuerung der Heizungsinstallation (Wärmeerzeuger) (z.B. Heizkessel, Gastherme, Anschluss an Fernwärme)
+                                        </span>
+                                    </span>
+                                </p>
+                                <div class="uncertainty-toggle" data-category="energyMeasures">
+                                    <input type="checkbox" id="uncertainty-energyMeasures" class="uncertainty-checkbox">
+                                    <label for="uncertainty-energyMeasures" class="uncertainty-label">Unsicher</label>
+                                </div>
+                            </div>
                             <div class="value-display value-neutral" id="energyMeasuresDisplay">-</div>
+                        </div>
+                        <div class="modernization-group">
+                            <div class="slider-container">
+                                <div class="slider-track" id="energyMeasuresTrack"></div>
+                                <div class="slider-thumb" id="energyMeasuresThumb"></div>
+                                <div class="slider-ticks">
+                                    <span class="slider-tick active" data-value="0">0</span>
+                                    <span class="slider-tick" data-value="1">1</span>
+                                    <span class="slider-tick" data-value="2">2</span>
+                                    <span class="slider-tick" data-value="3">3</span>
+                                    <span class="slider-tick" data-value="4">4</span>
+                                    <span class="slider-tick" data-value="5">5</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label" for="currentRent">Aktuelle Nettokaltmiete (€)</label>
-                    <div class="form-controls">
-                        <input type="number" id="currentRent" min="0" step="0.01" placeholder="z.B. 600">
-                        <div class="value-display value-neutral">-</div>
+                <!-- Abschnitt 5: Aktuelle Miete -->
+                <div class="input-island">
+                    <div class="section-divider">
+                        <h2>Aktuelle Nettokaltmiete</h2>
                     </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="currentRent">Aktuelle Nettokaltmiete (€)</label>
+                        <div class="form-controls">
+                            <input type="number" id="currentRent" min="0" step="0.01" placeholder="z.B. 600">
+                            <div class="value-display value-neutral">-</div>
+                        </div>
+                    </div>
+                    
+                    <button id="calculateBtn">Vergleichsmiete berechnen</button>
                 </div>
-                
-                <button id="calculateBtn">Vergleichsmiete berechnen</button>
             </div>
-            
+        </div>
+        
+        <div class="tab-content" id="results-tab">
             <div class="result-section">
-                <div class="result-box">
-                    <div class="result-title">Berechnungsergebnis</div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Basismiete (€/m²):</span>
-                        <span class="result-value" id="baseRentResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Summe Zu-/Abschläge (€/m²):</span>
-                        <span class="result-value" id="adjustmentsResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Durchschnittliche Vergleichsmiete (€/m²):</span>
-                        <span class="result-value" id="avgRentResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Untere Grenze (€/m²):</span>
-                        <span class="result-value" id="lowerLimitResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Obere Grenze (€/m²):</span>
-                        <span class="result-value" id="upperLimitResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Monatliche Vergleichsmiete (€):</span>
-                        <span class="result-value" id="monthlyRentResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Untere Spanne (€):</span>
-                        <span class="result-value" id="lowerSpanResult">-</span>
-                    </div>
-                    
-                    <div class="result-item">
-                        <span class="result-label">Obere Spanne (€):</span>
-                        <span class="result-value" id="upperSpanResult">-</span>
-                    </div>
-                </div>
-                
-                <div class="result-box">
+                <div class="result-island">
                     <div class="result-title">Vergleich mit aktueller Miete</div>
                     
                     <div class="range-container">
@@ -322,11 +377,110 @@
                         <span class="result-value" id="differenceResult">-</span>
                     </div>
                     
+                    <div class="result-item">
+                        <span class="result-label">
+                            Differenz (optimistisch) (€)
+                            <span class="info-icon">?
+                                <span class="tooltip">Ergebnis unter Einbeziehung der Unsicherheit zu Gunsten des Mieters</span>
+                            </span>
+                        </span>
+                        <span class="result-value optimistic-bg" id="differenceOptimisticResult">-</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="result-label">
+                            Differenz (pessimistisch) (€)
+                            <span class="info-icon">?
+                                <span class="tooltip">Ergebnis unter Einbeziehung der Unsicherheit zu Ungunsten des Mieters</span>
+                            </span>
+                        </span>
+                        <span class="result-value pessimistic-bg" id="differencePessimisticResult">-</span>
+                    </div>
+                    
                     <div class="difference" id="differenceText">-</div>
+                </div>
+                
+                <div class="result-island">
+                    <div class="result-title">
+                        Lasst uns gegen fiese Vermieter vorgehen.
+                        <span class="info-icon">?
+                            <span class="tooltip">Teile uns anonym mit, wer dein Vermieter ist, und ob er zu viel Miete verlangt.</span>
+                        </span>
+                    </div>
+                    
+                    <div class="landlord-form">
+                        <div class="form-group">
+                            <label class="form-label" for="landlordName">
+                                Name Vermietung
+                                <span class="info-icon">?
+                                    <span class="tooltip">Der Name der Vermietung steht im Mietvertrag.</span>
+                                </span>
+                            </label>
+                            <input type="text" id="landlordName" placeholder="Name der Vermietung">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="managementName">
+                                Name Verwaltung
+                                <span class="info-icon">?
+                                    <span class="tooltip">Der Name der Verwaltung steht im Mietvertrag.</span>
+                                </span>
+                            </label>
+                            <input type="text" id="managementName" placeholder="Name der Verwaltung">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="streetName">Straße</label>
+                            <input type="text" id="streetName" placeholder="Straßenname" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="houseNumber">Hausnummer</label>
+                            <input type="text" id="houseNumber" placeholder="Hausnummer">
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="form-label">Trifft eine dieser Aussagen auf dich zu?</div>
+                            <div class="statement-group">
+                                <div class="statement-item">
+                                    <input type="checkbox" id="statement1">
+                                    <label for="statement1">1. Miete macht den Großteil meiner Ausgaben aus.</label>
+                                </div>
+                                <div class="statement-item">
+                                    <input type="checkbox" id="statement2">
+                                    <label for="statement2">2. Mein Vermieter vernachlässigt die Wohnung.</label>
+                                </div>
+                                <div class="statement-item">
+                                    <input type="checkbox" id="statement3">
+                                    <label for="statement3">3. Ich habe Angst vor Mieterhöhung/Kündigung.</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="shareBtn" class="share-button">Teilen</button>
+                            <button id="showIntermediateFromResults" class="secondary-button">Zwischenergebnisse anzeigen</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="info-text">
                     <p><strong>Hinweis:</strong> Dieser Rechner basiert auf dem qualifizierten Mietspiegel 2024 für Rostock. Die ortsübliche Vergleichsmiete ist eine Spanne, in der sich drei Viertel aller Mieten befinden. Die Berechnung dient als Orientierung und ersetzt keine professionelle Rechtsberatung.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="intermediate-tab">
+            <div class="intermediate-section">
+                <div class="result-island">
+                    <div class="result-title">Zwischenergebnisse</div>
+                    
+                    <div id="intermediate-content">
+                        <!-- Hier werden die Zwischenergebnisse dynamisch eingefügt -->
+                        <div class="no-results-message">
+                            <p>Bitte führen Sie zuerst eine Berechnung durch, um die Zwischenergebnisse anzuzeigen.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -336,7 +490,6 @@
         </footer>
     </div>
 
-<script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>

@@ -10,6 +10,14 @@
     --range-color: #27ae60;
     --positive-color: #e74c3c;
     --negative-color: #2ecc71;
+    --uncertainty-color: #ffeb3b;
+    --optimistic-color: #d4edda;
+    --optimistic-text: #155724;
+    --pessimistic-color: #f8d7da;
+    --pessimistic-text: #721c24;
+    --tab-active: #B07CD7;
+    --tab-inactive: #e0e0e0;
+    --island-bg: #ffffff;
 }
 
 * {
@@ -20,7 +28,7 @@
 }
 
 body {
-    background-color: var(--light-gray);
+    background-color: white;
     color: var(--text-color);
     line-height: 1.6;
     padding: 20px;
@@ -29,10 +37,11 @@ body {
 .container {
     max-width: 1100px;
     margin: 0 auto;
-    background-color: white;
+    background-color: var(--secondary-color);
     border-radius: 10px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    padding: 20px;
 }
 
 header {
@@ -76,23 +85,77 @@ h1 {
     opacity: 0.9;
 }
 
-.content {
+/* Tab-Styling */
+.tabs {
     display: flex;
-    flex-wrap: wrap;
+    background-color: var(--light-gray);
+    border-bottom: 1px solid var(--border-color);
 }
 
-.input-section {
+.tab-button {
     flex: 1;
-    min-width: 300px;
-    padding: 20px;
-    border-right: 1px solid var(--border-color);
+    padding: 15px 20px;
+    background-color: var(--tab-inactive);
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.result-section {
-    flex: 1;
-    min-width: 300px;
+.tab-button.active {
+    background-color: white;
+    border-bottom: 3px solid var(--tab-active);
+    color: var(--tab-active);
+}
+
+.tab-button:hover:not(.active) {
+    background-color: #f0f0f0;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Insel-Styling für Eingabe- und Ergebnisbereiche */
+.input-island, .result-island {
+    background-color: white;
+    border-radius: 8px;
     padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+/* Hintergrund für die gesamte Seite */
+body {
     background-color: var(--secondary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* Abschnitt-Trennlinien */
+.section-divider {
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-divider h2 {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+/* Eingabe-Bereich */
+.input-section {
+    max-width: 100%;
 }
 
 .form-group {
@@ -126,6 +189,7 @@ h1 {
     text-align: center;
     font-weight: 600;
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
 .value-positive {
@@ -193,17 +257,19 @@ input, select {
     align-items: center;
     margin-bottom: 8px;
     justify-content: space-between;
+    gap: 10px;
 }
 
 .checkbox-left {
     display: flex;
     align-items: center;
     flex: 1;
+    gap: 10px;
 }
 
 .checkbox-left input {
     width: auto;
-    margin-right: 10px;
+    margin-right: 0;
     min-width: auto;
 }
 
@@ -212,12 +278,34 @@ input, select {
     align-items: center;
     font-weight: normal;
     margin-bottom: 0;
+    flex: 1;
+}
+
+/* Modernisierungs-Header Anpassungen */
+.modernization-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.modernization-text-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.modernization-label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
 }
 
 .modernization-group {
     margin-top: 10px;
-    padding-left: 15px;
-    border-left: 3px solid var(--primary-color);
 }
 
 .slider-container {
@@ -274,6 +362,38 @@ input, select {
     transform: translateX(-50%);
     z-index: 2;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Unsicherheits-Toggle */
+.uncertainty-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.uncertainty-checkbox {
+    display: none;
+}
+
+.uncertainty-label {
+    padding: 6px 12px;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.uncertainty-checkbox:checked + .uncertainty-label {
+    background-color: var(--uncertainty-color);
+    border-color: #ffc107;
+    color: #856404;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
 }
 
 .info-icon {
@@ -345,6 +465,38 @@ button:hover {
     background-color: #9c6bc5;
 }
 
+.secondary-button {
+    background-color: #6c757d;
+}
+
+.secondary-button:hover {
+    background-color: #5a6268;
+}
+
+.share-button {
+    background-color: #28a745;
+}
+
+.share-button:hover {
+    background-color: #218838;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.button-group button {
+    flex: 1;
+    margin-top: 0;
+}
+
+/* Ergebnis-Bereich */
+.result-section {
+    background-color: white;
+    padding: 0;
+}
+
 .result-box {
     background-color: white;
     border-radius: 8px;
@@ -360,6 +512,9 @@ button:hover {
     color: var(--primary-color);
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .result-item {
@@ -372,10 +527,30 @@ button:hover {
 
 .result-label {
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .result-value {
     font-weight: 600;
+}
+
+/* Optimistische und pessimistische Hintergründe */
+.optimistic-bg {
+    background-color: var(--optimistic-color);
+    color: var(--optimistic-text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #c3e6cb;
+}
+
+.pessimistic-bg {
+    background-color: var(--pessimistic-color);
+    color: var(--pessimistic-text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
 }
 
 .range-container {
@@ -404,6 +579,7 @@ button:hover {
     height: 30px;
     background-color: var(--accent-color);
     transform: translateX(-50%);
+    display: none;
 }
 
 .range-labels {
@@ -441,6 +617,100 @@ button:hover {
     color: var(--error-color);
 }
 
+/* Vermieter-Abschnitt */
+.landlord-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.landlord-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.address-group {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+}
+
+.address-street {
+    margin-bottom: 0;
+}
+
+.address-number {
+    margin-bottom: 0;
+}
+
+.address-number input {
+    width: 100%;
+    min-width: auto;
+}
+
+.statement-section {
+    margin: 20px 0;
+}
+
+.statement-group {
+    margin-top: 10px;
+}
+
+.statement-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.statement-item input {
+    width: auto;
+    min-width: auto;
+}
+
+.statement-item label {
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+/* Zwischenergebnisse-Bereich */
+.intermediate-section {
+    padding: 0;
+}
+
+.no-results-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.result-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.result-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.column-header {
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: center;
+    text-align: center;
+}
+
 .info-text {
     font-size: 0.9rem;
     color: #666;
@@ -466,37 +736,18 @@ footer {
     left: 120px;
 }
 
-/* Allgemeine Verbesserung für Tooltips */
-.info-icon {
-    position: relative;
-    z-index: 10; /* Sicherstellen dass Tooltips über anderen Elementen liegen */
-}
-
-.tooltip {
-    z-index: 1000; /* Sehr hoher z-index für Tooltips */
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
     .content {
         flex-direction: column;
     }
     
-    .input-section {
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+    .tabs {
+        flex-direction: column;
     }
     
-    .tooltip {
-        width: 250px;
-    }
-    
-    .construction-tooltip {
-        left: -80px;
-        width: 250px;
-    }
-    
-    .construction-tooltip::after {
-        left: 100px;
+    .tab-button {
+        width: 100%;
     }
     
     .form-group {
@@ -508,9 +759,35 @@ footer {
         width: 100%;
         justify-content: space-between;
         margin-top: 5px;
+        flex-wrap: wrap;
+        gap: 5px;
     }
     
-    /* NEU: Logo-Anpassungen für Mobile */
+    .checkbox-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .checkbox-left {
+        width: 100%;
+        margin-bottom: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .modernization-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .modernization-text-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
     .header-content {
         flex-direction: column;
         gap: 10px;
@@ -519,11 +796,11 @@ footer {
     
     .logo-container {
         position: static;
-        order: -1; /* Logo nach oben bringen */
+        order: -1;
     }
     
     .logo {
-        height: 40px; /* Kleinere Logo-Größe für Mobile */
+        height: 40px;
         margin-bottom: 5px;
     }
     
@@ -532,40 +809,105 @@ footer {
     }
     
     h1 {
-        font-size: 1.5rem; /* Kleinere Überschrift für Mobile */
+        font-size: 1.5rem;
         margin-bottom: 5px;
     }
     
     .subtitle {
-        font-size: 0.9rem; /* Kleinere Untertitel für Mobile */
-    }
-
-    /* NEU: Bessere Abstände für Ausstattung auf Mobile */
-    .checkbox-item {
-        margin-bottom: 15px; /* Mehr Abstand zwischen den Zeilen */
-        padding: 8px 0; /* Vertikaler Abstand */
-        align-items: flex-start; /* Oben ausrichten statt center */
+        font-size: 0.9rem;
     }
     
-    .checkbox-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+    .address-group {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
     
-    .checkbox-left label {
-        line-height: 1.4; /* Bessere Lesbarkeit */
-    }
-    
-    /* Tooltips für Mobile anpassen */
-    .info-icon {
-        margin-left: 8px; /* Mehr Abstand zum Text */
-    }
-    
-    /* Sicherstellen dass Preisboxen nicht überlappen */
     .value-display {
-        min-width: 80px; /* Konsistente Breite */
-        margin-left: 10px; /* Abstand zum Text */
-    }    
+        min-width: 80px;
+    }
+    
+    .result-label {
+        flex-wrap: wrap;
+    }
+    
+    .result-columns {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+}
 
+/* Unsicherheits-Toggles auf der linken Seite positionieren */
+.form-label-with-uncertainty {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.checkbox-label-with-uncertainty {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.checkbox-label-with-uncertainty label {
+    flex: 0;
+    margin-right: 15px;
+}
+
+.checkbox-label-with-uncertainty .uncertainty-toggle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-shrink: 0;
+}
+
+/* Für Baujahr-Feld spezifische Anpassung */
+.form-group .form-label-with-uncertainty {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.form-group .form-label-with-uncertainty label {
+    margin-bottom: 0;
+    flex: 0 1 auto;
+    white-space: nowrap;
+}
+
+/* Anpassungen für die Ausrichtung in Checkbox-Gruppen */
+.checkbox-group .checkbox-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.checkbox-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.checkbox-label-with-uncertainty label {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Sicherstellen, dass alle Unsicherheitsboxen in einer Linie sind */
+.checkbox-group .checkbox-item .checkbox-left {
+    width: 100%;
+    position: relative;
+}
+
+.checkbox-group .checkbox-item .value-display {
+    min-width: 80px;
+    margin-left: 15px;
+    flex-shrink: 0;
 }
