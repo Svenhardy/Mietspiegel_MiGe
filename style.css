@@ -28,7 +28,7 @@
 }
 
 body {
-    background-color: white;
+    background-color: white;  /* Bereits weiß - falls es var(--secondary-color) war, ersetze es */
     color: var(--text-color);
     line-height: 1.6;
     padding: 20px;
@@ -256,7 +256,6 @@ input, select {
     display: flex;
     align-items: center;
     margin-bottom: 8px;
-    justify-content: space-between;
     gap: 10px;
 }
 
@@ -265,6 +264,7 @@ input, select {
     align-items: center;
     flex: 1;
     gap: 10px;
+    justify-content: space-between;
 }
 
 .checkbox-left input {
@@ -278,7 +278,17 @@ input, select {
     align-items: center;
     font-weight: normal;
     margin-bottom: 0;
-    flex: 1;
+}
+
+/* Unsicherheits-Toggle direkt nach Label */
+.checkbox-item .uncertainty-toggle {
+    margin-left: 10px;
+    margin-right: auto;
+}
+
+/* Value-Display ganz rechts */
+.checkbox-item .value-display {
+    margin-left: auto;
 }
 
 /* Modernisierungs-Header Anpassungen */
