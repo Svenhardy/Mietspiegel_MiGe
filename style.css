@@ -773,17 +773,46 @@ footer {
         gap: 5px;
     }
     
+    /* Mobile Anpassung für Checkbox-Items */
     .checkbox-item {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        align-items: stretch;
+        gap: 8px;
         margin-bottom: 15px;
     }
     
     .checkbox-left {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
         width: 100%;
-        margin-bottom: 5px;
-        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+    
+    .checkbox-left input[type="checkbox"] {
+        flex-shrink: 0;
+        width: auto;
+        min-width: auto;
+    }
+    
+    .checkbox-left label {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.9rem;
+    }
+    
+    .checkbox-item .uncertainty-toggle {
+        flex-shrink: 0;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .checkbox-item .value-display {
+        width: 100%;
+        margin-left: 0;
+        text-align: center;
     }
     
     .modernization-header {
@@ -849,6 +878,7 @@ footer {
         flex-direction: column;
     }
 }
+
 
 /* Unsicherheits-Toggles auf der linken Seite positionieren */
 .form-label-with-uncertainty {
