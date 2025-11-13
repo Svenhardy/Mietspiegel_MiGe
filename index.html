@@ -400,14 +400,21 @@
                     <div class="difference" id="differenceText">-</div>
                 </div>
                 
-                <div class="result-island">
-                    <div class="result-title">
-                        Lasst uns gegen fiese Vermieter vorgehen.
-                        <span class="info-icon">?
-                            <span class="tooltip">Teile uns anonym mit, wer dein Vermieter ist, und ob er zu viel Miete verlangt.</span>
-                        </span>
-                    </div>
-                    
+<div class="result-island">
+    <div class="result-title">
+        Lasst uns gegen fiese Vermieter vorgehen.
+        <span class="info-icon">?
+            <span class="tooltip">Teile uns anonym mit, wer dein Vermieter ist, und ob er zu viel Miete verlangt.</span>
+        </span>
+    </div>
+    
+    <p class="landlord-intro-text">
+        Schickt uns anonym Daten zu euren Vermietern, damit wir einen besseren Überblick kriegen, wer besonders hohe Mieten verlangt und uns gemeinsam dagegen wehren können!
+    </p>
+    
+<!-- Honeypot gegen Bots - unsichtbar für Menschen -->
+<input type="text" id="honeypot" name="website" style="position:absolute;left:-5000px;top:-5000px;" tabindex="-1" autocomplete="off" aria-hidden="true">
+
                     <div class="landlord-form">
                         <div class="form-group">
                             <label class="form-label" for="landlordName">

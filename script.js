@@ -733,7 +733,36 @@ function updateRangeBar(lowerSpan, upperSpan, currentRent) {
 }
 
 async function shareData() {
-    // Validierung: Prüfen ob eine Berechnung durchgeführt wurde
+    // ========================================
+    // 1. HONEYPOT-CHECK (gegen Bots)
+    // ========================================
+    const honeypot = document.getElementById('honeypot');
+    if (honeypot && honeypot.value !== '') {
+        // Bot erkannt - stillen Abbruch (keine Fehlermeldung)
+        console.log('Bot detected');
+        // Fake-Erfolgsmeldung für den Bot
+        alert('Daten wurden erfolgreich übermittelt. Vielen Dank für Ihre Teilnahme!');
+        return;
+    }
+    
+    // ========================================
+    // 2. RATE LIMITING (5 Minuten Wartezeit)
+    // ========================================
+    const RATE_LIMIT_KEY = 'mige_lastSubmitTime';
+    const MIN_INTERVAL = 300000; // 5 Minuten in Millisekunden
+    
+    const lastSubmit = localStorage.getItem(RATE_LIMIT_KEY);
+    const now = Date.now();
+    
+    if (lastSubmit && (now - parseInt(lastSubmit)) < MIN_INTERVAL) {
+        const remainingTime = Math.ceil((MIN_INTERVAL - (now - parseInt(lastSubmit))) / 60000);
+        alert(`Bitte warten Sie noch ${remainingTime} Minute(n), bevor Sie erneut Daten senden können.\n\nDies dient dem Schutz vor Spam.`);
+        return;
+    }
+    
+    // ========================================
+    // 3. VALIDIERUNG: Berechnung durchgeführt?
+    // ========================================
     const results = localStorage.getItem('intermediateResults');
     if (!results) {
         alert('Bitte führen Sie zuerst eine Berechnung durch, bevor Sie Daten teilen.');
@@ -742,22 +771,26 @@ async function shareData() {
     
     const parsedResults = JSON.parse(results);
     
-    // Eingabewerte sammeln
-    const landlordName = document.getElementById('landlordName').value;
-    const managementName = document.getElementById('managementName').value;
-    const streetName = document.getElementById('streetName').value;
-    const houseNumber = document.getElementById('houseNumber').value;
+    // ========================================
+    // 4. EINGABEWERTE SAMMELN & VALIDIEREN
+    // ========================================
+    const landlordName = document.getElementById('landlordName').value.trim();
+    const managementName = document.getElementById('managementName').value.trim();
+    const streetName = document.getElementById('streetName').value.trim();
+    const houseNumber = document.getElementById('houseNumber').value.trim();
     
-    // Validierung: Mindestens Straße muss ausgefüllt sein
-    if (!streetName) {
-        alert('Bitte geben Sie mindestens den Straßennamen an.');
-        return;
+    // Erweiterte Validierung
+    if (!validateInput(streetName, landlordName)) {
+        return; // validateInput zeigt bereits Fehlermeldung
     }
     
-// Daten für Google Sheet vorbereiten
+    // ========================================
+    // 5. DATEN VORBEREITEN
+    // ========================================
     const currentRent = parseFloat(document.getElementById('currentRent').value);
     
     const data = {
+        apiKey: 'MiGe_Rostock_2024_Secure!', // API-Key für Authentifizierung
         streetName: streetName,
         houseNumber: houseNumber,
         landlordName: landlordName,
@@ -777,26 +810,38 @@ async function shareData() {
     // ⚠️ HIER DEINE GOOGLE APPS SCRIPT URL EINFÜGEN:
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHb_562Jl70TI1GReSZ720ezkmPEZAQVRj9gWDf-QEzUTWOGiCiv7qESW4Qw_rc-yTpg/exec';
     
-    // Button während des Sendens deaktivieren
+    // ========================================
+    // 6. BUTTON DEAKTIVIEREN WÄHREND SENDEN
+    // ========================================
     const shareButton = document.getElementById('shareBtn');
     const originalText = shareButton.textContent;
     shareButton.disabled = true;
     shareButton.textContent = 'Wird gesendet...';
     
     try {
+        // ========================================
+        // 7. DATEN AN GOOGLE SHEETS SENDEN
+        // ========================================
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Wichtig für Google Apps Script
+            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data)
         });
         
-        // Bei no-cors können wir die Response nicht lesen, aber wenn kein Error geworfen wird, war es erfolgreich
+        // Erfolg!
         alert('Daten wurden erfolgreich übermittelt. Vielen Dank für Ihre Teilnahme!');
         
-        // Felder zurücksetzen
+        // ========================================
+        // 8. RATE LIMIT TIMESTAMP SPEICHERN
+        // ========================================
+        localStorage.setItem(RATE_LIMIT_KEY, now.toString());
+        
+        // ========================================
+        // 9. FELDER ZURÜCKSETZEN
+        // ========================================
         document.getElementById('landlordName').value = '';
         document.getElementById('managementName').value = '';
         document.getElementById('houseNumber').value = '';
@@ -812,6 +857,68 @@ async function shareData() {
         shareButton.disabled = false;
         shareButton.textContent = originalText;
     }
+}
+
+// ========================================
+// VALIDIERUNGS-FUNKTION (Maßnahme 3)
+// ========================================
+function validateInput(streetName, landlordName) {
+    // Mindestens Straße muss ausgefüllt sein
+    if (!streetName || streetName.length < 3) {
+        alert('Bitte geben Sie einen gültigen Straßennamen an (mindestens 3 Zeichen).');
+        return false;
+    }
+    
+    // Straßenname muss Buchstaben enthalten (nicht nur Zahlen/Sonderzeichen)
+    if (!/[a-zA-ZäöüßÄÖÜ]/.test(streetName)) {
+        alert('Der Straßenname muss Buchstaben enthalten.');
+        return false;
+    }
+    
+    // Straßenname nicht zu lang (vermutlich Spam)
+    if (streetName.length > 100) {
+        alert('Der Straßenname ist zu lang. Bitte überprüfen Sie Ihre Eingabe.');
+        return false;
+    }
+    
+    // Keine verdächtigen Zeichen (z.B. < > für HTML-Injection)
+    if (/[<>]/.test(streetName) || /[<>]/.test(landlordName)) {
+        alert('Ihre Eingabe enthält ungültige Zeichen.');
+        return false;
+    }
+    
+    // Optional: Prüfen ob Straße in der Datenbank existiert
+    if (streets && streets.length > 0) {
+        const streetExists = streets.some(s => 
+            s.name.toLowerCase().includes(streetName.toLowerCase()) ||
+            streetName.toLowerCase().includes(s.name.toLowerCase())
+        );
+        
+        if (!streetExists && streetName.length > 5) {
+            const confirm = window.confirm(
+                'Die eingegebene Straße "' + streetName + '" wurde nicht in unserer Datenbank gefunden.\n\n' +
+                'Möchten Sie trotzdem fortfahren?\n\n' +
+                '(Bitte überprüfen Sie die Schreibweise, falls es sich um einen Tippfehler handelt.)'
+            );
+            if (!confirm) {
+                return false;
+            }
+        }
+    }
+    
+    // Vermietername prüfen (falls ausgefüllt)
+    if (landlordName && landlordName.length > 200) {
+        alert('Der Vermieter-Name ist zu lang. Bitte kürzen Sie die Eingabe.');
+        return false;
+    }
+    
+    // Keine reinen Leerzeichen
+    if (streetName.trim() === '') {
+        alert('Bitte geben Sie einen gültigen Straßennamen an.');
+        return false;
+    }
+    
+    return true;
 }
 
 // Initialisierung
