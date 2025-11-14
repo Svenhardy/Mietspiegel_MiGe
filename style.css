@@ -34,6 +34,21 @@ body {
     padding: 20px;
 }
 
+/* Verhindert automatisches Scrollen */
+html {
+    scroll-behavior: smooth;
+}
+
+.tab-content {
+    scroll-margin-top: 20px;
+}
+
+/* Beim Tab-Wechsel oben bleiben */
+.tab-content.active {
+    display: block;
+    scroll-behavior: auto;
+}
+
 .container {
     max-width: 1100px;
     margin: 0 auto;
@@ -140,17 +155,33 @@ body {
     padding: 20px;
 }
 
-/* Abschnitt-Trennlinien */
+/* Abschnitt-Trennlinien mit Lila-Fadeout */
 .section-divider {
-    margin: 0 0 20px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--border-color);
+    margin: 0 0 25px 0;
+    padding-bottom: 12px;
+    position: relative;
+}
+
+.section-divider::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        var(--primary-color) 0%, 
+        var(--primary-color) 30%, 
+        rgba(176, 124, 215, 0.5) 60%, 
+        rgba(176, 124, 215, 0) 100%);
+    border-radius: 2px;
 }
 
 .section-divider h2 {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     color: var(--primary-color);
     margin-bottom: 5px;
+    font-weight: 600;
 }
 
 /* Eingabe-Bereich */
@@ -406,39 +437,83 @@ input, select {
     box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
 }
 
+/* Verbesserte Info-Icons und Tooltips */
 .info-icon {
     display: inline-block;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background-color: var(--primary-color);
     color: white;
     border-radius: 50%;
     text-align: center;
-    line-height: 16px;
+    line-height: 18px;
     font-size: 12px;
-    margin-left: 5px;
+    margin-left: 6px;
     cursor: help;
     position: relative;
 }
 
 .tooltip {
     visibility: hidden;
-    width: 300px;
+    width: 320px;
     background-color: #333;
     color: white;
     text-align: left;
-    border-radius: 6px;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 12px;
     position: absolute;
-    z-index: 100;
+    z-index: 1000;
     bottom: 125%;
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s, visibility 0.3s;
     font-size: 0.9rem;
     font-weight: normal;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    line-height: 1.4;
+}
+
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+/* Tooltips für rechts positionierte Elemente */
+.checkbox-item:nth-child(n+8) .tooltip,
+.modernization-header .tooltip {
+    left: auto;
+    right: 0;
+    transform: translateX(0);
+}
+
+.checkbox-item:nth-child(n+8) .tooltip::after,
+.modernization-header .tooltip::after {
+    left: auto;
+    right: 15px;
+}
+
+/* Tooltips für Elemente am unteren Rand - nach oben anzeigen */
+.checkbox-item:nth-last-child(-n+3) .tooltip {
+    bottom: auto;
+    top: 125%;
+}
+
+.checkbox-item:nth-last-child(-n+3) .tooltip::after {
+    top: auto;
+    bottom: 100%;
+    border-color: transparent transparent #333 transparent;
+}
+
+.info-icon:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
 }
 
 .tooltip::after {
@@ -516,15 +591,30 @@ button:hover {
 }
 
 .result-title {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 600;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     color: var(--primary-color);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 8px;
+    padding-bottom: 12px;
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+}
+
+.result-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        var(--primary-color) 0%, 
+        var(--primary-color) 30%, 
+        rgba(176, 124, 215, 0.5) 60%, 
+        rgba(176, 124, 215, 0) 100%);
+    border-radius: 2px;
 }
 
 .result-item {
@@ -877,6 +967,47 @@ footer {
     .button-group {
         flex-direction: column;
     }
+
+/* Tooltips für Mobile - Intelligente Positionierung */
+.tooltip {
+    width: 280px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 125%;
+    font-size: 0.85rem;
+    padding: 10px;
+}
+
+/* Tooltips am rechten Rand nach links verschieben */
+.checkbox-item:nth-child(n+7) .tooltip,
+.modernization-header .tooltip {
+    left: auto;
+    right: -10px;
+    transform: none;
+}
+
+.checkbox-item:nth-child(n+7) .tooltip::after,
+.modernization-header .tooltip::after {
+    left: auto;
+    right: 20px;
+}
+
+/* Tooltips für untere Elemente nach oben */
+.checkbox-item:nth-last-child(-n+4) .tooltip,
+.modernization-header .tooltip,
+.form-group:nth-last-child(-n+2) .tooltip {
+    bottom: auto;
+    top: 125%;
+}
+
+.checkbox-item:nth-last-child(-n+4) .tooltip::after,
+.modernization-header .tooltip::after,
+.form-group:nth-last-child(-n+2) .tooltip::after {
+    top: auto;
+    bottom: 100%;
+    border-color: transparent transparent #333 transparent;
+}    
+
 }
 
 
@@ -951,3 +1082,4 @@ footer {
     margin-left: 15px;
     flex-shrink: 0;
 }
+

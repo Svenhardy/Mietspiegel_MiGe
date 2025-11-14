@@ -701,6 +701,12 @@ function switchToTab(tabId) {
     // Füge aktive Klasse zum ausgewählten Tab hinzu
     document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
     document.getElementById(`${tabId}-tab`).classList.add('active');
+    
+    // NEUE ZEILEN: Scroll nach oben beim Tab-Wechsel
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
 }
 
 function updateRangeBar(lowerSpan, upperSpan, currentRent) {
